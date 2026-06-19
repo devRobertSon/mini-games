@@ -5,7 +5,7 @@
 // ===========================================================================
 (function () {
   const { loadGame, saveGame, isAuthed } = window.MG.store;
-  const { STAGES, endlessEvent } = window.MG;
+  const { STAGES, endlessSlot, endlessMainDist } = window.MG;
 
 const GAME_ID = "gate-rush";
 
@@ -92,6 +92,7 @@ function startEndless(restore) {
     seed: restore ? restore.seed : (Math.random() * 1e9) | 0,
     events: [],
     genIndex: 0,
+    lastMainD: 0,
     progress: restore ? restore.progress : 0,
     army: restore ? restore.army : 40,
     px: CENTER,
@@ -104,11 +105,13 @@ function startEndless(restore) {
 }
 
 function ensureEvents() {
-  const need = run.progress + 1200;
-  let last = run.events[run.events.length - 1];
-  while (!last || last.d < need) {
-    run.events.push({ ...endlessEvent(run.seed, run.genIndex++), resolved: false });
-    last = run.events[run.events.length - 1];
+  const need = run.progress + 1400;
+  while (run.lastMainD < need) {
+    const i = run.genIndex++;
+    for (const ev of endlessSlot(run.seed, i)) {
+      run.events.push({ ...ev, resolved: false });
+    }
+    run.lastMainD = endlessMainDist(i);
   }
 }
 

@@ -10,7 +10,7 @@
 //
 //  op: '+', '-', '*', '/'   (각각 더하기/빼기/곱하기/나누기)
 //  좌표계: 플레이 영역 x 는 40(좌)~360(우), 중앙 200.
-//  ES 모듈 미사용: 전역 MG.STAGES / MG.endlessEvent 에 등록.
+//  ES 모듈 미사용: 전역 MG.STAGES / MG.endlessSlot 에 등록.
 // ===========================================================================
 (function () {
   window.MG = window.MG || {};
@@ -155,70 +155,71 @@ function makeRng(seed) {
   };
 }
 
-// 이벤트 간격: 뒤로 갈수록 촘촘해지되 하한(400px)을 둬 항상 피할 수 있게
-function spacingAt(k) {
-  return Math.max(400, 640 - k * 4);
-}
-function endlessDist(i) {
-  let d = 600;
-  for (let k = 0; k < i; k++) d += spacingAt(k);
-  return d;
+// 메인 격자: 게이트 / 적 / 보스가 놓이는 슬롯. 간격은 항상 일정.
+const MAIN_GAP = 600;
+function endlessMainDist(i) {
+  return 700 + i * MAIN_GAP;
 }
 
-// 무한 모드: 시드로부터 i번째 이벤트를 결정적으로 생성.
-//   - 앞쪽: 곱하기 게이트가 흔함 → 빠르게 성장
-//   - 뒤쪽: 곱하기 확률 급감, 적/장애물 증가 → 난이도 상승
-//   - 장애물은 좁은 단일 형태라 항상 지나갈 틈이 남는다.
-function endlessEvent(seed, i) {
+// 무한 모드: i번째 "메인 슬롯"에 해당하는 이벤트들의 배열을 결정적으로 생성.
+//   - 메인 이벤트(게이트/적/보스)는 항상 MAIN_GAP 간격으로 배치 (좁아지지 않음).
+//   - 장애물은 메인 슬롯 "사이 빈 공간"에 별도로 배치 (뒤로 갈수록 더, 단 피할 수 있게).
+//   - 적/보스는 게이트가 없는 슬롯에 등장.
+function endlessSlot(seed, i) {
   const rng = makeRng(seed * 1000003 + i * 97 + 7);
-  const d = endlessDist(i);
+  const d = endlessMainDist(i);
   const tier = 1 + i * 0.16;
+  const out = [];
 
-  // 첫 게이트만 곱하기로 가볍게 시작
+  // ----- 메인 이벤트 -----
   if (i < 1) {
-    return gate(d, { op: "*", val: 2 }, { op: "/", val: 2 });
-  }
-
-  // 일정 간격마다 보스(장교) 등장
-  if (i % 14 === 0) {
-    return boss(d, Math.round(40 * tier));
-  }
-
-  // 종류 결정: 뒤로 갈수록 장애물 비중↑ (단, 피할 수 있을 만큼만)
-  const obstacleChance = Math.min(0.5, 0.08 + i * 0.012);
-  const enemyChance = 0.2;
-  const r = rng();
-
-  if (r < enemyChance) {
+    // 첫 게이트만 곱하기로 가볍게 시작
+    out.push(gate(d, { op: "*", val: 2 }, { op: "/", val: 2 }));
+  } else if (i % 14 === 0) {
+    // 일정 간격마다 보스(장교)
+    out.push(boss(d, Math.round(40 * tier)));
+  } else if (rng() < 0.22) {
+    // 적 (게이트가 없는 슬롯)
     const count = Math.round((18 + i * 11) * (0.8 + rng() * 0.5));
-    return enemy(d, Math.max(5, count));
-  }
-  if (r < enemyChance + obstacleChance) {
-    const x = 90 + rng() * 220; // [90, 310] — 벽에서 떨어져 항상 우회 가능
-    return obstacle(d, x, 84);
+    out.push(enemy(d, Math.max(5, count)));
+  } else {
+    // 게이트: 곱하기 확률은 i 가 커질수록 급감 (앞쪽도 과하지 않게 → 뒤쪽 거의 없음)
+    const pMult = Math.max(0.05, 0.42 - i * 0.03);
+    let good;
+    if (rng() < pMult) {
+      good = rng() < 0.35 ? { op: "*", val: 3 } : { op: "*", val: 2 };
+    } else {
+      good =
+        rng() < 0.5
+          ? { op: "+", val: Math.round(30 * tier) }
+          : { op: "+", val: Math.round(60 * tier) };
+    }
+    const badPool = [
+      { op: "/", val: 2 },
+      { op: "/", val: 3 },
+      { op: "-", val: Math.round(20 * tier) },
+      { op: "-", val: Math.round(40 * tier) },
+    ];
+    const bad = badPool[(rng() * badPool.length) | 0];
+    out.push(rng() < 0.5 ? gate(d, good, bad) : gate(d, bad, good));
   }
 
-  // 게이트: 곱하기 확률은 i 가 커질수록 급감 (앞쪽도 과하지 않게 → 뒤쪽 거의 없음)
-  const pMult = Math.max(0.05, 0.42 - i * 0.03);
-  let good;
-  if (rng() < pMult) {
-    good = rng() < 0.35 ? { op: "*", val: 3 } : { op: "*", val: 2 };
-  } else {
-    good =
-      rng() < 0.5
-        ? { op: "+", val: Math.round(30 * tier) }
-        : { op: "+", val: Math.round(60 * tier) };
+  // ----- 장애물: 이 슬롯 ~ 다음 슬롯 사이 빈 공간에 배치 -----
+  // 후보 위치 2곳(간격의 40%, 73% 지점). 각각 확률적으로 채우며,
+  // 뒤로 갈수록 채워질 확률↑. 좁은 장애물 + 충분한 세로 간격으로 항상 회피 가능.
+  const cand = [0.4, 0.73];
+  const fillProb = [Math.min(0.8, i * 0.05), Math.min(0.7, (i - 8) * 0.05)];
+  for (let k = 0; k < cand.length; k++) {
+    if (rng() < fillProb[k]) {
+      const od = d + MAIN_GAP * cand[k];
+      const x = 100 + rng() * 200; // [100, 300] — 항상 우회 가능
+      out.push(obstacle(od, x, 84));
+    }
   }
-  const badPool = [
-    { op: "/", val: 2 },
-    { op: "/", val: 3 },
-    { op: "-", val: Math.round(20 * tier) },
-    { op: "-", val: Math.round(40 * tier) },
-  ];
-  const bad = badPool[(rng() * badPool.length) | 0];
-  return rng() < 0.5 ? gate(d, good, bad) : gate(d, bad, good);
+  return out;
 }
 
   window.MG.STAGES = STAGES;
-  window.MG.endlessEvent = endlessEvent;
+  window.MG.endlessSlot = endlessSlot;
+  window.MG.endlessMainDist = endlessMainDist;
 })();
