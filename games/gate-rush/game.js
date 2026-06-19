@@ -1,11 +1,11 @@
 // ===========================================================================
-//  LAST WAR - 게이트 러너
+//  GATE RUSH - 게이트 러너
 //  순수 Canvas / 픽셀 아트 렌더링
 // ===========================================================================
 import { loadGame, saveGame, isAuthed } from "../../js/storage.js";
 import { STAGES, endlessEvent } from "./stages.js";
 
-const GAME_ID = "lastwar";
+const GAME_ID = "gate-rush";
 
 // 로그인 가드: 로그인 안 했으면 라이브러리로
 if (!isAuthed()) {
@@ -184,14 +184,14 @@ function finish(result) {
   if (result === "win") {
     title.textContent = "CLEAR!";
     title.style.color = "var(--good)";
-    sub.textContent = "남은 병력 " + formatNum(run.army);
+    sub.textContent = "남은 유닛 " + formatNum(run.army);
     nextBtn.hidden = run.endless || !STAGES.find((s) => s.id === run.stageId + 1);
   } else {
     title.textContent = run.endless ? "GAME OVER" : "FAILED";
     title.style.color = "var(--accent)";
     sub.textContent = run.endless
       ? "도달 거리 " + Math.floor(run.progress) + "m"
-      : "병력이 전멸했습니다";
+      : "유닛이 전멸했습니다";
     nextBtn.hidden = true;
   }
   hud.hidden = true;
@@ -242,7 +242,7 @@ function update(dt) {
   run.particles = run.particles.filter((p) => p.life > 0);
   if (run.flash > 0) run.flash -= dt;
 
-  hudArmy.textContent = "🪖 " + formatNum(run.army);
+  hudArmy.textContent = "🏃 " + formatNum(run.army);
 }
 
 // ===========================================================================
@@ -454,7 +454,7 @@ function renderSelect() {
   if (data.slot) {
     const c = document.createElement("div");
     c.className = "continue-card";
-    c.innerHTML = `<div class="ct-title">▶ 이어하기</div><div class="ct-sub">${data.slot.label} · 병력 ${formatNum(
+    c.innerHTML = `<div class="ct-title">▶ 이어하기</div><div class="ct-sub">${data.slot.label} · 유닛 ${formatNum(
       data.slot.army
     )}</div>`;
     c.onclick = continueFromSlot;

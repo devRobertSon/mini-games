@@ -5,12 +5,12 @@
 
 export const GAMES = [
   {
-    id: "lastwar",
-    title: "LAST WAR",
-    desc: "게이트를 골라 병력을 불리고 적 기지를 격파하라. 위로 달리며 ×2, +10, ÷2 갈림길에서 더 좋은 쪽을 선택!",
-    path: "games/lastwar/index.html",
-    icon: "🪖",
-    banner: "linear-gradient(135deg,#3a2f6b 0%,#ff4d6d 100%)",
+    id: "gate-rush",
+    title: "GATE RUSH",
+    desc: "갈림길 게이트에서 더 좋은 연산을 골라 유닛을 불려라. 위로 달리며 ×2, +10, ÷2 중 선택해 최종 보스를 돌파!",
+    path: "games/gate-rush/index.html",
+    icon: "🏃",
+    banner: "linear-gradient(135deg,#3a2f6b 0%,#4dd0e1 100%)",
     tags: ["액션", "캐주얼", "픽셀"],
     available: true,
     // 갤러리 카드에 표시할 진행도 배지 (세이브 데이터 기반)
