@@ -147,9 +147,30 @@ function resolveEvent(e) {
   e.resolved = true;
   const prev = run.army;
   if (e.type === "gate") {
-    const side = run.px < CENTER ? e.left : e.right;
-    run.army = applyOp(run.army, side.op, side.val);
-    const good = side.op === "+" || side.op === "*";
+    // 스쿼드 가로폭이 두 게이트(좌/우)에 얼마나 걸치는지로 판정.
+    //  - 병사가 적으면 폭이 거의 0 → 사실상 중앙 점(한 게이트만)
+    //  - 병사가 많으면 폭이 넓어 중앙을 가로지르면 두 게이트에 모두 걸침
+    const half = squadHalfWidth();
+    const lo = run.px - half;
+    const hi = run.px + half;
+    const leftOverlap = Math.max(0, Math.min(hi, CENTER) - Math.max(lo, PLAY_L));
+    const rightOverlap = Math.max(0, Math.min(hi, PLAY_R) - Math.max(lo, CENTER));
+
+    let order;
+    if (leftOverlap > 0 && rightOverlap > 0) {
+      // 두 게이트 모두 걸침 → 많이 닿은 쪽부터 둘 다 적용
+      order =
+        leftOverlap >= rightOverlap ? [e.left, e.right] : [e.right, e.left];
+    } else if (rightOverlap > 0) {
+      order = [e.right];
+    } else if (leftOverlap > 0) {
+      order = [e.left];
+    } else {
+      order = [run.px < CENTER ? e.left : e.right];
+    }
+    for (const g of order) run.army = applyOp(run.army, g.op, g.val);
+
+    const good = run.army >= prev;
     spawnFlash(run.px, SQUAD_Y, good ? "#5cff8f" : "#ff4d6d", 10);
     // 게이트(− 또는 ÷)로 병사가 줄어도 동일하게 감소 표시
     if (run.army < prev) triggerDamage(prev - run.army);
