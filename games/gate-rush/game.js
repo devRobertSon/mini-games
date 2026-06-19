@@ -219,7 +219,7 @@ function finish(result) {
 // ===========================================================================
 function update(dt) {
   const speed = run.endless
-    ? Math.min(400, 185 + run.progress * 0.0045)
+    ? Math.min(600, 185 + run.progress * 0.009)
     : run.speed;
   run.progress += speed * dt;
 
