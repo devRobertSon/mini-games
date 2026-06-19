@@ -30,7 +30,7 @@ function boss(d, count) {
 
 // 무한모드 전 단계: 5개 스테이지.
 //   1) 더하기·빼기만   2) 곱하기·나누기만   3) 4연산 전부
-//   4) 4연산 + 장애물   5) 속도 = 무한모드 최대(400)의 절반(200)
+//   4) 4연산 + 장애물   5) 속도 = 무한모드 최대(600)의 절반(300)
 //   ※ 장애물은 4스테이지부터 등장.
 const STAGES = [
   {
@@ -103,7 +103,7 @@ const STAGES = [
     id: 5,
     name: "STAGE 5 · FINAL",
     startArmy: 30,
-    speed: 200,
+    speed: 300,
     events: [
       gate(700, { op: "*", val: 2 }, { op: "+", val: 20 }),
       obstacle(1050, 150),
