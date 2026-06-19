@@ -140,6 +140,13 @@ function resolveEvent(e) {
     run.army = Math.max(0, run.army - e.count);
     spawnFlash(CENTER, SQUAD_Y - 30, "#ffd54d", 16);
     run.flash = 0.14;
+  } else if (e.type === "obstacle") {
+    // 부딪히면(스쿼드 중심이 장애물 폭 안) 현재 유닛의 5% 감소
+    if (Math.abs(run.px - e.x) < e.w / 2) {
+      run.army = Math.floor(run.army * 0.95);
+      spawnFlash(run.px, SQUAD_Y - 10, "#cfc4a0", 14);
+      run.flash = 0.1;
+    }
   } else if (e.type === "boss") {
     if (run.army >= e.count) {
       run.army -= e.count;
@@ -205,7 +212,7 @@ function finish(result) {
 // ===========================================================================
 function update(dt) {
   const speed = run.endless
-    ? Math.min(360, 160 + run.progress * 0.004)
+    ? Math.min(400, 185 + run.progress * 0.0045)
     : run.speed;
   run.progress += speed * dt;
 
@@ -329,6 +336,26 @@ function drawEnemyGroup(e, y) {
   ctx.globalAlpha = 1;
 }
 
+function drawObstacle(e, y) {
+  ctx.globalAlpha = e.resolved ? 0.25 : 1;
+  const x = e.x - e.w / 2;
+  const h = 26;
+  // 본체
+  ctx.fillStyle = "#5a5470";
+  ctx.fillRect(x, y - h / 2, e.w, h);
+  ctx.fillStyle = "#2a2540";
+  ctx.fillRect(x, y + h / 2 - 4, e.w, 4);
+  // 경고 줄무늬
+  ctx.fillStyle = "#ffd54d";
+  ctx.fillRect(x, y - h / 2, e.w, 3);
+  // 윗면 가시
+  ctx.fillStyle = "#ff6b3d";
+  for (let sx = x + 3; sx < x + e.w - 3; sx += 9) {
+    ctx.fillRect(sx, y - h / 2 - 5, 4, 5);
+  }
+  ctx.globalAlpha = 1;
+}
+
 function drawBoss(e, y) {
   ctx.globalAlpha = e.resolved ? 0.2 : 1;
   const w = PLAY_R - PLAY_L;
@@ -383,6 +410,7 @@ function render() {
     if (y < -90 || y > H + 90) continue;
     if (e.type === "gate") drawGate(e, y);
     else if (e.type === "enemy") drawEnemyGroup(e, y);
+    else if (e.type === "obstacle") drawObstacle(e, y);
     else if (e.type === "boss") drawBoss(e, y);
   }
   drawSquad();
