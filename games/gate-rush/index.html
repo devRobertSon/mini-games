@@ -69,6 +69,9 @@
     </div>
   </div>
 
-  <script type="module" src="./game.js"></script>
+  <!-- ES 모듈 미사용: file:// 에서도 동작하도록 일반 스크립트를 순서대로 로드 -->
+  <script src="../../js/storage.js"></script>
+  <script src="./stages.js"></script>
+  <script src="./game.js"></script>
 </body>
 </html>

@@ -15,5 +15,6 @@
 //  현재 기본 비밀번호: "minigame"
 // ===========================================================================
 
-export const PASSWORD_HASH =
+window.MG = window.MG || {};
+window.MG.PASSWORD_HASH =
   "05aa91d178aac2aa6c034946cd01b10dc6636e64eac7c1d72158891a6149f117";

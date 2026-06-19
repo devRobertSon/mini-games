@@ -53,6 +53,11 @@
     </footer>
   </section>
 
-  <script type="module" src="./js/main.js"></script>
+  <!-- ES 모듈 미사용: file:// 에서도 동작하도록 일반 스크립트를 순서대로 로드 -->
+  <script src="./js/config.js"></script>
+  <script src="./js/auth.js"></script>
+  <script src="./js/storage.js"></script>
+  <script src="./games/registry.js"></script>
+  <script src="./js/main.js"></script>
 </body>
 </html>
