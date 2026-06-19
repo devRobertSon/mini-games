@@ -5,7 +5,7 @@
 //  이벤트 종류:
 //    { d, type:'gate', left:{op,val}, right:{op,val} }   ← 두 갈림길
 //    { d, type:'enemy', count }                          ← 적 무리(유닛 차감)
-//    { d, type:'obstacle', x, w }                        ← 장애물(부딪히면 5% 감소)
+//    { d, type:'obstacle', x, w }                        ← 장애물(부딪히면 10% 감소)
 //    { d, type:'boss',  count }                          ← 보스(>= 면 클리어)
 //
 //  op: '+', '-', '*', '/'   (각각 더하기/빼기/곱하기/나누기)
