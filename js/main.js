@@ -1,10 +1,10 @@
 // ===========================================================================
 //  셸 컨트롤러: 로그인 → 갤러리 흐름
+//  (ES 모듈 미사용 — file:// 에서도 동작하도록 전역 MG 네임스페이스 사용)
 // ===========================================================================
-import { PASSWORD_HASH } from "./config.js";
-import { verifyPassword, sha256Hex } from "./auth.js";
-import { isAuthed, setAuthed, loadGame } from "./storage.js";
-import { GAMES } from "../games/registry.js";
+(function () {
+  const { PASSWORD_HASH, GAMES, verifyPassword, sha256Hex } = window.MG;
+  const { isAuthed, setAuthed, loadGame } = window.MG.store;
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -127,3 +127,4 @@ function init() {
 }
 
 init();
+})();

@@ -1,9 +1,11 @@
 // ===========================================================================
 //  GATE RUSH - 게이트 러너
 //  순수 Canvas / 픽셀 아트 렌더링
+//  (ES 모듈 미사용 — file:// 에서도 동작하도록 전역 MG 네임스페이스 사용)
 // ===========================================================================
-import { loadGame, saveGame, isAuthed } from "../../js/storage.js";
-import { STAGES, endlessEvent } from "./stages.js";
+(function () {
+  const { loadGame, saveGame, isAuthed } = window.MG.store;
+  const { STAGES, endlessEvent } = window.MG;
 
 const GAME_ID = "gate-rush";
 
@@ -622,3 +624,4 @@ $("#btn-next").onclick = () => startStageById(run.stageId + 1);
 
 // ---------- 시작 ----------
 openSelect();
+})();

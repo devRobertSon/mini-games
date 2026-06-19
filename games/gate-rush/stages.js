@@ -8,7 +8,10 @@
 //    { d, type:'boss',  count }                          ← 보스(>= 면 클리어)
 //
 //  op: '+', '-', '*', '/'   (각각 더하기/빼기/곱하기/나누기)
+//  ES 모듈 미사용: 전역 MG.STAGES / MG.endlessEvent 에 등록.
 // ===========================================================================
+(function () {
+  window.MG = window.MG || {};
 
 function gate(d, l, r) {
   return { d, type: "gate", left: l, right: r };
@@ -20,7 +23,7 @@ function boss(d, count) {
   return { d, type: "boss", count };
 }
 
-export const STAGES = [
+const STAGES = [
   {
     id: 1,
     name: "STAGE 1",
@@ -119,7 +122,7 @@ export const STAGES = [
 ];
 
 // ---------- 무한 모드용 시드 PRNG (mulberry32) ----------
-export function makeRng(seed) {
+function makeRng(seed) {
   let a = seed >>> 0;
   return function () {
     a |= 0;
@@ -132,7 +135,7 @@ export function makeRng(seed) {
 
 // 무한 모드: 시드로부터 i번째 이벤트를 결정적으로 생성
 //   난이도는 거리(인덱스)에 따라 점점 상승한다.
-export function endlessEvent(seed, i) {
+function endlessEvent(seed, i) {
   const rng = makeRng(seed * 1000003 + i * 97 + 7);
   const d = 700 + i * 720; // 균일 간격
   const tier = 1 + i * 0.18; // 난이도 계수
@@ -161,3 +164,7 @@ export function endlessEvent(seed, i) {
   const bad = badOps[(rng() * badOps.length) | 0];
   return pick < 0.5 ? gate(d, good, bad) : gate(d, bad, good);
 }
+
+  window.MG.STAGES = STAGES;
+  window.MG.endlessEvent = endlessEvent;
+})();
