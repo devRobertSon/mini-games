@@ -79,6 +79,8 @@ function startStage(stage, restore) {
     px: CENTER,
     particles: [],
     flash: 0,
+    borderFlash: 0,
+    damageTexts: [],
     ended: false,
   };
   if (restore) markResolved();
@@ -98,6 +100,8 @@ function startEndless(restore) {
     px: CENTER,
     particles: [],
     flash: 0,
+    borderFlash: 0,
+    damageTexts: [],
     ended: false,
   };
   ensureEvents();
@@ -134,6 +138,7 @@ function applyOp(n, op, val) {
 
 function resolveEvent(e) {
   e.resolved = true;
+  const prev = run.army;
   if (e.type === "gate") {
     const side = run.px < CENTER ? e.left : e.right;
     run.army = applyOp(run.army, side.op, side.val);
@@ -143,24 +148,28 @@ function resolveEvent(e) {
     run.army = Math.max(0, run.army - e.count);
     spawnFlash(CENTER, SQUAD_Y - 30, "#ffd54d", 16);
     run.flash = 0.14;
+    triggerDamage(prev - run.army);
   } else if (e.type === "obstacle") {
-    // 부딪히면(스쿼드 중심이 장애물 폭 안) 현재 유닛의 5% 감소
+    // 부딪히면(스쿼드 중심이 장애물 폭 안) 현재 유닛의 10% 감소
     if (Math.abs(run.px - e.x) < e.w / 2) {
-      run.army = Math.floor(run.army * 0.95);
+      run.army = Math.floor(run.army * 0.9);
       spawnFlash(run.px, SQUAD_Y - 10, "#cfc4a0", 14);
       run.flash = 0.1;
+      triggerDamage(prev - run.army);
     }
   } else if (e.type === "boss") {
     if (run.army >= e.count) {
       run.army -= e.count;
       run.flash = 0.2;
       spawnFlash(CENTER, SQUAD_Y - 20, "#ffd54d", 22);
+      triggerDamage(e.count);
       if (!run.endless) {
         finish("win");
         return;
       }
       // 무한모드: 보스 격파 후 계속 진행
     } else {
+      triggerDamage(run.army);
       run.army = 0;
     }
   }
@@ -257,6 +266,11 @@ function update(dt) {
   }
   run.particles = run.particles.filter((p) => p.life > 0);
   if (run.flash > 0) run.flash -= dt;
+
+  // 데미지 표시 효과 갱신
+  if (run.borderFlash > 0) run.borderFlash -= dt;
+  for (const t of run.damageTexts) t.life -= dt;
+  run.damageTexts = run.damageTexts.filter((t) => t.life > 0);
 
   hudArmy.textContent = "🏃 " + formatNum(run.army);
 }
@@ -357,21 +371,19 @@ function drawGate(e, y) {
 
 function drawEnemyGroup(e, y) {
   ctx.globalAlpha = e.resolved ? 0.2 : 1;
-  // 적도 아군과 같은 병사 무리(색만 다름)로 표시
-  const shown = Math.min(21, Math.max(3, Math.round(e.count / 8)));
-  const cols = 7;
+  // 적 병사를 가로로 일렬 배치 (플레이 영역 전체 폭에 균등 분포)
+  const shown = Math.min(12, Math.max(4, Math.round(e.count / 12)));
+  const left = PLAY_L + 16;
+  const right = PLAY_R - 16;
   for (let i = 0; i < shown; i++) {
-    const r = Math.floor(i / cols);
-    const c = i % cols;
-    const rowCount = Math.min(cols, shown - r * cols);
-    const x = CENTER + (c - (rowCount - 1) / 2) * 16;
-    drawPixelFigure(x, y + r * 12 - 6, ENEMY_PAL, 2);
+    const x = shown === 1 ? CENTER : left + (i * (right - left)) / (shown - 1);
+    drawPixelFigure(x, y, ENEMY_PAL, 2);
   }
   ctx.fillStyle = "#ff6b81";
   ctx.font = '15px "Press Start 2P", monospace';
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText(formatNum(e.count), CENTER, y - 24);
+  ctx.fillText(formatNum(e.count), CENTER, y - 22);
   ctx.globalAlpha = 1;
 }
 
@@ -459,6 +471,41 @@ function render() {
     ctx.fillStyle = "rgba(255,255,255," + run.flash * 1.4 + ")";
     ctx.fillRect(0, 0, W, H);
   }
+
+  // 유닛 감소 표시 ① 빨간 테두리 깜빡임
+  if (run.borderFlash > 0) {
+    const t = run.borderFlash;
+    const blink = Math.floor(t * 12) % 2 === 0 ? 0.95 : 0.25;
+    const a = Math.min(1, t / 0.55) * blink;
+    ctx.fillStyle = "rgba(255,40,70," + a + ")";
+    const b = 14;
+    ctx.fillRect(0, 0, W, b);
+    ctx.fillRect(0, H - b, W, b);
+    ctx.fillRect(0, 0, b, H);
+    ctx.fillRect(W - b, 0, b, H);
+  }
+  // 유닛 감소 표시 ② 큰 -N 텍스트가 위로 떠오르며 사라짐
+  for (const t of run.damageTexts) {
+    const p = 1 - t.life; // 0 → 1
+    const ty = SQUAD_Y - 80 - p * 55;
+    ctx.globalAlpha = t.life > 0.35 ? 1 : t.life / 0.35;
+    ctx.font = '24px "Press Start 2P", monospace';
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "#3a0010";
+    ctx.fillText("-" + formatNum(t.amount), CENTER + 3, ty + 3);
+    ctx.fillStyle = "#ff3b5c";
+    ctx.fillText("-" + formatNum(t.amount), CENTER, ty);
+    ctx.globalAlpha = 1;
+  }
+}
+
+// 유닛이 줄었을 때 화면 표시(테두리 깜빡임 + 큰 -N 텍스트) 트리거
+function triggerDamage(amount) {
+  amount = Math.floor(amount);
+  if (amount <= 0) return;
+  run.borderFlash = 0.55;
+  run.damageTexts.push({ amount, life: 1.0 });
 }
 
 function spawnFlash(x, y, color, n) {
