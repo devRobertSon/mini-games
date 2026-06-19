@@ -60,14 +60,22 @@ function setupLogin() {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
     errorEl.hidden = true;
-    const ok = await verifyPassword(input.value, PASSWORD_HASH);
-    if (ok) {
-      setAuthed(true);
-      enterGallery();
-    } else {
+    try {
+      const ok = await verifyPassword(input.value, PASSWORD_HASH);
+      if (ok) {
+        setAuthed(true);
+        enterGallery();
+      } else {
+        errorEl.textContent = "비밀번호가 틀렸습니다";
+        errorEl.hidden = false;
+        input.value = "";
+        input.focus();
+      }
+    } catch (err) {
+      // 어떤 경우에도 조용히 멈추지 않도록 오류를 표시
+      console.error("login error:", err);
+      errorEl.textContent = "로그인 처리 오류: " + (err?.message || err);
       errorEl.hidden = false;
-      input.value = "";
-      input.focus();
     }
   });
 }
