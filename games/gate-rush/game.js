@@ -714,6 +714,7 @@ window.addEventListener("keyup", (e) => {
 
 let pointerTarget = null;
 let dragging = false;
+let lastDragX = 0;
 function canvasX(clientX) {
   const r = canvas.getBoundingClientRect();
   return ((clientX - r.left) / r.width) * W;
@@ -721,11 +722,18 @@ function canvasX(clientX) {
 canvas.addEventListener("pointerdown", (e) => {
   if (state !== "playing") return;
   dragging = true;
-  pointerTarget = canvasX(e.clientX);
+  lastDragX = canvasX(e.clientX);
+  // 탭(누르기)만으로는 움직이지 않음: 현재 위치를 목표로 고정
+  pointerTarget = run.px;
   canvas.setPointerCapture(e.pointerId);
 });
 canvas.addEventListener("pointermove", (e) => {
-  if (dragging && state === "playing") pointerTarget = canvasX(e.clientX);
+  if (!dragging || state !== "playing") return;
+  // 드래그한 거리(손가락 이동량)만큼 상대 이동
+  const x = canvasX(e.clientX);
+  const base = pointerTarget == null ? run.px : pointerTarget;
+  pointerTarget = Math.max(PLAY_L + 14, Math.min(PLAY_R - 14, base + (x - lastDragX)));
+  lastDragX = x;
 });
 canvas.addEventListener("pointerup", () => (dragging = false));
 canvas.addEventListener("pointercancel", () => (dragging = false));
