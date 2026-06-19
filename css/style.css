@@ -18,6 +18,11 @@
   padding: 0;
 }
 
+/* HTML hidden 속성이 항상 우선하도록 (작성자 display 규칙에 밀리는 문제 방지) */
+[hidden] {
+  display: none !important;
+}
+
 html,
 body {
   height: 100%;
