@@ -22,7 +22,7 @@ function enemy(d, count) {
   return { d, type: "enemy", count };
 }
 function obstacle(d, x, w) {
-  return { d, type: "obstacle", x, w: w || 84 };
+  return { d, type: "obstacle", x, w: w || 64 };
 }
 function boss(d, count) {
   return { d, type: "boss", count };
@@ -192,7 +192,7 @@ function endlessSlot(seed, i) {
     if (rng() < fillProb[k]) {
       const od = d + MAIN_GAP * cand[k];
       const x = 100 + rng() * 200; // [100, 300] — 항상 우회 가능
-      out.push(obstacle(od, x, 84));
+      out.push(obstacle(od, x, 64));
     }
   }
   return out;

@@ -136,6 +136,13 @@ function applyOp(n, op, val) {
   return n;
 }
 
+// 스쿼드(병사 무리)의 가로 반폭. drawSquad 의 배치(7열, 간격 14)와 동일하게 계산.
+function squadHalfWidth() {
+  const shown = Math.min(40, Math.max(1, Math.floor(run.army)));
+  const cols = Math.min(7, shown);
+  return ((cols - 1) / 2) * 14 + 4;
+}
+
 function resolveEvent(e) {
   e.resolved = true;
   const prev = run.army;
@@ -144,14 +151,16 @@ function resolveEvent(e) {
     run.army = applyOp(run.army, side.op, side.val);
     const good = side.op === "+" || side.op === "*";
     spawnFlash(run.px, SQUAD_Y, good ? "#5cff8f" : "#ff4d6d", 10);
+    // 게이트(− 또는 ÷)로 병사가 줄어도 동일하게 감소 표시
+    if (run.army < prev) triggerDamage(prev - run.army);
   } else if (e.type === "enemy") {
     run.army = Math.max(0, run.army - e.count);
     spawnFlash(CENTER, SQUAD_Y - 30, "#ffd54d", 16);
     run.flash = 0.14;
     triggerDamage(prev - run.army);
   } else if (e.type === "obstacle") {
-    // 부딪히면(스쿼드 중심이 장애물 폭 안) 현재 유닛의 10% 감소
-    if (Math.abs(run.px - e.x) < e.w / 2) {
+    // 스쿼드(가로 폭)가 장애물과 겹치면 충돌 → 보이는 접촉과 판정이 일치
+    if (Math.abs(run.px - e.x) < e.w / 2 + squadHalfWidth()) {
       run.army = Math.floor(run.army * 0.9);
       spawnFlash(run.px, SQUAD_Y - 10, "#cfc4a0", 14);
       run.flash = 0.1;
