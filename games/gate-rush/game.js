@@ -151,8 +151,12 @@ function resolveEvent(e) {
     if (run.army >= e.count) {
       run.army -= e.count;
       run.flash = 0.2;
-      finish("win");
-      return;
+      spawnFlash(CENTER, SQUAD_Y - 20, "#ffd54d", 22);
+      if (!run.endless) {
+        finish("win");
+        return;
+      }
+      // 무한모드: 보스 격파 후 계속 진행
     } else {
       run.army = 0;
     }
@@ -260,7 +264,39 @@ function update(dt) {
 const FIG = ["·H·", "BBB", "·B·", "·B·", "L·L"];
 const ALLY_PAL = { head: "#ffd9a0", body: "#4dd0e1", leg: "#2a2150" };
 const ENEMY_PAL = { head: "#ffd9a0", body: "#ff4d6d", leg: "#2a0a16" };
-const BOSS_PAL = { head: "#ffd9a0", body: "#b71c3a", leg: "#2a0a16" };
+
+// 보스 = 큰 장교 스프라이트 (모자 + 견장)
+const OFFICER = [
+  "·CCC·",
+  "·HHH·",
+  "GBBBG",
+  "·BBB·",
+  "·BBB·",
+  "·B·B·",
+  "·L·L·",
+];
+const OFFICER_COL = {
+  C: "#1a1438", // 모자
+  H: "#ffd9a0", // 얼굴
+  B: "#b71c3a", // 몸(적군색)
+  G: "#ffd54d", // 견장(금색)
+  L: "#2a0a16", // 다리
+};
+
+function drawSprite(rows, cx, cy, s, colorOf) {
+  const h = rows.length;
+  const w = rows[0].length;
+  const ox = Math.round(cx - (w * s) / 2);
+  const oy = Math.round(cy - (h * s) / 2);
+  for (let r = 0; r < h; r++) {
+    for (let c = 0; c < w; c++) {
+      const ch = rows[r][c];
+      if (ch === "·") continue;
+      ctx.fillStyle = colorOf(ch);
+      ctx.fillRect(ox + c * s, oy + r * s, s, s);
+    }
+  }
+}
 
 function drawPixelFigure(cx, cy, pal, s) {
   const ox = Math.round(cx - (3 * s) / 2);
@@ -318,21 +354,21 @@ function drawGate(e, y) {
 
 function drawEnemyGroup(e, y) {
   ctx.globalAlpha = e.resolved ? 0.2 : 1;
-  const w = PLAY_R - PLAY_L;
-  ctx.fillStyle = "#3a1020";
-  ctx.fillRect(PLAY_L, y - 24, w, 48);
-  ctx.fillStyle = "#ff4d6d";
-  ctx.fillRect(PLAY_L, y - 24, w, 3);
-  const n = Math.min(7, Math.max(3, Math.round(e.count / 25)));
-  for (let i = 0; i < n; i++) {
-    const x = PLAY_L + 28 + (i * (w - 56)) / Math.max(1, n - 1);
-    drawPixelFigure(x, y + 2, ENEMY_PAL, 2);
+  // 적도 아군과 같은 병사 무리(색만 다름)로 표시
+  const shown = Math.min(21, Math.max(3, Math.round(e.count / 8)));
+  const cols = 7;
+  for (let i = 0; i < shown; i++) {
+    const r = Math.floor(i / cols);
+    const c = i % cols;
+    const rowCount = Math.min(cols, shown - r * cols);
+    const x = CENTER + (c - (rowCount - 1) / 2) * 16;
+    drawPixelFigure(x, y + r * 12 - 6, ENEMY_PAL, 2);
   }
-  ctx.fillStyle = "#fff";
+  ctx.fillStyle = "#ff6b81";
   ctx.font = '15px "Press Start 2P", monospace';
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  ctx.fillText("💀" + formatNum(e.count), CENTER, y - 38);
+  ctx.fillText(formatNum(e.count), CENTER, y - 24);
   ctx.globalAlpha = 1;
 }
 
@@ -364,7 +400,8 @@ function drawBoss(e, y) {
   ctx.fillStyle = "#ff4d6d";
   ctx.fillRect(PLAY_L, y - 44, w, 4);
   ctx.fillRect(PLAY_L, y + 40, w, 4);
-  drawPixelFigure(CENTER, y + 4, BOSS_PAL, 5);
+  // 큰 장교 스프라이트
+  drawSprite(OFFICER, CENTER, y + 6, 6, (ch) => OFFICER_COL[ch]);
   ctx.fillStyle = "#ffd54d";
   ctx.font = '17px "Press Start 2P", monospace';
   ctx.textAlign = "center";

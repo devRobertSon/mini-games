@@ -174,11 +174,14 @@ function endlessEvent(seed, i) {
   const d = endlessDist(i);
   const tier = 1 + i * 0.16;
 
-  // 처음 두 개는 곱하기 게이트로 워밍업
-  if (i < 2) {
-    const good = { op: "*", val: 2 };
-    const bad = { op: "/", val: 2 };
-    return rng() < 0.5 ? gate(d, good, bad) : gate(d, bad, good);
+  // 첫 게이트만 곱하기로 가볍게 시작
+  if (i < 1) {
+    return gate(d, { op: "*", val: 2 }, { op: "/", val: 2 });
+  }
+
+  // 일정 간격마다 보스(장교) 등장
+  if (i % 14 === 0) {
+    return boss(d, Math.round(40 * tier));
   }
 
   // 종류 결정: 뒤로 갈수록 장애물 비중↑ (단, 피할 수 있을 만큼만)
@@ -195,8 +198,8 @@ function endlessEvent(seed, i) {
     return obstacle(d, x, 84);
   }
 
-  // 게이트: 곱하기 확률은 i 가 커질수록 급감 (앞쪽 多 → 뒤쪽 거의 없음)
-  const pMult = Math.max(0.07, 0.85 - i * 0.04);
+  // 게이트: 곱하기 확률은 i 가 커질수록 급감 (앞쪽도 과하지 않게 → 뒤쪽 거의 없음)
+  const pMult = Math.max(0.05, 0.42 - i * 0.03);
   let good;
   if (rng() < pMult) {
     good = rng() < 0.35 ? { op: "*", val: 3 } : { op: "*", val: 2 };
