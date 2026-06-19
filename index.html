@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Mini Games Arcade</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./css/style.css" />
+</head>
+<body>
+  <!-- 로그인 게이트 -->
+  <section id="login-screen" class="screen">
+    <div class="login-box">
+      <h1 class="logo">MINI<br />GAMES</h1>
+      <p class="subtitle">PRESS START</p>
+      <form id="login-form" autocomplete="off">
+        <input
+          id="password-input"
+          type="password"
+          inputmode="text"
+          placeholder="비밀번호 입력"
+          aria-label="비밀번호"
+        />
+        <button type="submit" class="btn btn-primary">로그인</button>
+      </form>
+      <p id="login-error" class="error" hidden>비밀번호가 틀렸습니다</p>
+    </div>
+    <p class="hint">힌트가 필요하면 관리자에게 문의하세요</p>
+  </section>
+
+  <!-- 비밀번호 해시 생성기 (URL에 #sethash 를 붙이면 표시됨) -->
+  <section id="sethash-screen" class="screen" hidden>
+    <div class="login-box">
+      <h2>해시 생성기</h2>
+      <p class="subtitle">새 비밀번호의 SHA-256 해시</p>
+      <input id="sethash-input" type="text" placeholder="새 비밀번호" />
+      <pre id="sethash-output" class="hash-output">여기에 해시가 표시됩니다</pre>
+      <p class="hint">이 값을 <code>js/config.js</code> 의 PASSWORD_HASH 에 붙여넣으세요</p>
+    </div>
+  </section>
+
+  <!-- 갤러리 -->
+  <section id="gallery-screen" class="screen" hidden>
+    <header class="gallery-header">
+      <h1 class="gallery-title">🎮 GAME LIBRARY</h1>
+      <button id="logout-btn" class="btn btn-ghost">로그아웃</button>
+    </header>
+    <main id="game-grid" class="game-grid"></main>
+    <footer class="gallery-footer">
+      <span>GitHub Pages · 진행 상황은 이 브라우저에 저장됩니다</span>
+    </footer>
+  </section>
+
+  <script type="module" src="./js/main.js"></script>
+</body>
+</html>

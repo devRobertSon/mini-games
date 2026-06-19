@@ -1,0 +1,289 @@
+:root {
+  --bg: #0d0b1a;
+  --bg-2: #161228;
+  --panel: #1e1838;
+  --panel-2: #2a2150;
+  --accent: #ff4d6d;
+  --accent-2: #4dd0e1;
+  --good: #5cff8f;
+  --text: #f5f3ff;
+  --muted: #9a92c4;
+  --border: #3a2f6b;
+  --pixel-font: "Press Start 2P", "Courier New", monospace;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(circle at 20% 10%, #1c1640 0%, transparent 45%),
+    radial-gradient(circle at 80% 90%, #241a4d 0%, transparent 45%),
+    var(--bg);
+  color: var(--text);
+  font-family: var(--pixel-font);
+  -webkit-font-smoothing: none;
+  image-rendering: pixelated;
+  overflow-x: hidden;
+}
+
+.screen {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- 로그인 / 해시 ---------- */
+#login-screen,
+#sethash-screen {
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 24px;
+}
+
+.login-box {
+  background: var(--panel);
+  border: 3px solid var(--border);
+  border-radius: 4px;
+  box-shadow: 0 0 0 3px var(--bg), 0 12px 32px rgba(0, 0, 0, 0.5);
+  padding: 32px 28px;
+  width: min(420px, 92vw);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.logo {
+  font-size: 28px;
+  line-height: 1.4;
+  color: var(--accent);
+  text-shadow: 3px 3px 0 #7a1030;
+  letter-spacing: 2px;
+}
+
+.subtitle {
+  font-size: 9px;
+  color: var(--accent-2);
+  letter-spacing: 2px;
+}
+
+#login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+input[type="password"],
+input[type="text"] {
+  font-family: var(--pixel-font);
+  font-size: 12px;
+  padding: 14px 12px;
+  background: var(--bg-2);
+  border: 2px solid var(--border);
+  border-radius: 3px;
+  color: var(--text);
+  outline: none;
+}
+
+input:focus {
+  border-color: var(--accent-2);
+}
+
+.btn {
+  font-family: var(--pixel-font);
+  font-size: 11px;
+  padding: 14px 16px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: transform 0.05s ease, filter 0.15s ease;
+}
+
+.btn:active {
+  transform: translateY(2px);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 4px 0 #7a1030;
+}
+
+.btn-primary:active {
+  box-shadow: 0 2px 0 #7a1030;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--muted);
+  border: 2px solid var(--border);
+}
+
+.btn-ghost:hover {
+  color: var(--text);
+  border-color: var(--accent-2);
+}
+
+.error {
+  color: var(--accent);
+  font-size: 9px;
+  letter-spacing: 1px;
+}
+
+.hint {
+  font-size: 8px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.6;
+}
+
+.hash-output {
+  font-family: "Courier New", monospace;
+  font-size: 11px;
+  word-break: break-all;
+  background: var(--bg-2);
+  border: 2px solid var(--border);
+  padding: 12px;
+  border-radius: 3px;
+  color: var(--good);
+}
+
+/* ---------- 갤러리 ---------- */
+.gallery-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 3px solid var(--border);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.gallery-title {
+  font-size: 16px;
+  color: var(--accent-2);
+  text-shadow: 2px 2px 0 #0a3d44;
+}
+
+.game-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+  padding: 24px;
+  align-content: start;
+}
+
+.game-card {
+  background: var(--panel);
+  border: 3px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.1s ease, border-color 0.1s ease, box-shadow 0.1s ease;
+}
+
+.game-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--accent);
+  box-shadow: 0 8px 24px rgba(255, 77, 109, 0.25);
+}
+
+.game-card.locked {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.game-card.locked:hover {
+  transform: none;
+  border-color: var(--border);
+  box-shadow: none;
+}
+
+.card-banner {
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 52px;
+  position: relative;
+  image-rendering: pixelated;
+}
+
+.card-body {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+.card-title {
+  font-size: 12px;
+  color: var(--text);
+  letter-spacing: 1px;
+}
+
+.card-desc {
+  font-size: 8px;
+  line-height: 1.7;
+  color: var(--muted);
+  font-family: "Courier New", monospace;
+}
+
+.card-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: auto;
+}
+
+.tag {
+  font-size: 7px;
+  padding: 4px 6px;
+  background: var(--panel-2);
+  border-radius: 2px;
+  color: var(--accent-2);
+}
+
+.card-progress {
+  font-size: 8px;
+  color: var(--good);
+  font-family: "Courier New", monospace;
+}
+
+.gallery-footer {
+  padding: 16px 24px;
+  border-top: 3px solid var(--border);
+  font-size: 8px;
+  color: var(--muted);
+  text-align: center;
+}
+
+@media (max-width: 480px) {
+  .logo {
+    font-size: 22px;
+  }
+  .gallery-title {
+    font-size: 12px;
+  }
+  .game-grid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 14px;
+    padding: 16px;
+  }
+}

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Last War</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <div id="stage" class="stage">
+    <!-- 상단 HUD -->
+    <header id="hud" class="hud" hidden>
+      <button id="btn-menu" class="hud-btn" title="나가기">⮜</button>
+      <div class="hud-center">
+        <div id="hud-stage" class="hud-stage">STAGE</div>
+        <div id="hud-army" class="hud-army">🪖 0</div>
+      </div>
+      <div class="hud-right">
+        <button id="btn-save" class="hud-btn" title="저장">💾</button>
+        <button id="btn-pause" class="hud-btn" title="일시정지">⏸</button>
+      </div>
+    </header>
+
+    <!-- 게임 캔버스 -->
+    <canvas id="game-canvas" width="400" height="700"></canvas>
+
+    <!-- 스테이지 선택 -->
+    <div id="screen-select" class="overlay">
+      <div class="panel">
+        <h1 class="title">LAST WAR</h1>
+        <p class="tagline">게이트를 골라 병력을 불려라</p>
+        <div id="continue-row"></div>
+        <h2 class="section">스테이지</h2>
+        <div id="stage-list" class="stage-list"></div>
+        <a href="../../index.html" class="link-back">⮜ 라이브러리로</a>
+      </div>
+    </div>
+
+    <!-- 일시정지 -->
+    <div id="screen-pause" class="overlay" hidden>
+      <div class="panel">
+        <h1 class="title">일시정지</h1>
+        <button id="btn-resume" class="game-btn primary">계속하기</button>
+        <button id="btn-save2" class="game-btn">현재 상황 저장</button>
+        <button id="btn-quit" class="game-btn ghost">스테이지 선택으로</button>
+      </div>
+    </div>
+
+    <!-- 결과 -->
+    <div id="screen-result" class="overlay" hidden>
+      <div class="panel">
+        <h1 id="result-title" class="title">CLEAR</h1>
+        <p id="result-sub" class="tagline"></p>
+        <button id="btn-next" class="game-btn primary">다음 스테이지</button>
+        <button id="btn-retry" class="game-btn">다시 도전</button>
+        <button id="btn-tomenu" class="game-btn ghost">스테이지 선택</button>
+      </div>
+    </div>
+
+    <!-- 토스트 -->
+    <div id="toast" class="toast" hidden></div>
+
+    <!-- 조작 안내 -->
+    <div id="hint-controls" class="controls-hint" hidden>
+      드래그 / 좌우키로 이동
+    </div>
+  </div>
+
+  <script type="module" src="./game.js"></script>
+</body>
+</html>
