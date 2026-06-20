@@ -5,7 +5,8 @@
 // ===========================================================================
 (function () {
   const { loadGame, saveGame, isAuthed } = window.MG.store;
-  const { STAGES, endlessSlot, endlessMainDist } = window.MG;
+  const { STAGES, endlessSlot, endlessMainDist, nextEndlessBossCount } =
+    window.MG;
 
 const GAME_ID = "gate-rush";
 
@@ -143,14 +144,29 @@ function squadHalfWidth() {
   return ((cols - 1) / 2) * 14 + 4;
 }
 
+// 다음(아직 안 지난) 보스의 병력 수
+function nextBossCount() {
+  if (run.endless) return nextEndlessBossCount(run.progress);
+  for (const e of run.events) if (e.type === "boss" && !e.resolved) return e.count;
+  return Infinity; // 보스 없음 → 항상 중앙 점
+}
+
+// 게이트 판정용 스쿼드 반폭:
+//  - 병사 < 다음 보스 → 중앙 점(0, 한 게이트만)
+//  - 병사 ≥ 다음 보스 → "많음" 넓이(두 게이트에 걸칠 수 있음)
+const SQUAD_WIDE_HALF = 46; // 7열 기준 스쿼드 반폭
+function gateHalfWidth() {
+  return run.army >= nextBossCount() ? SQUAD_WIDE_HALF : 0;
+}
+
 function resolveEvent(e) {
   e.resolved = true;
   const prev = run.army;
   if (e.type === "gate") {
     // 스쿼드 가로폭이 두 게이트(좌/우)에 얼마나 걸치는지로 판정.
-    //  - 병사가 적으면 폭이 거의 0 → 사실상 중앙 점(한 게이트만)
-    //  - 병사가 많으면 폭이 넓어 중앙을 가로지르면 두 게이트에 모두 걸침
-    const half = squadHalfWidth();
+    //  - 병사가 다음 보스보다 적으면 폭 0 → 사실상 중앙 점(한 게이트만)
+    //  - 병사가 다음 보스보다 많으면 폭이 넓어 중앙을 가로지르면 두 게이트에 모두 걸침
+    const half = gateHalfWidth();
     const lo = run.px - half;
     const hi = run.px + half;
     const leftOverlap = Math.max(0, Math.min(hi, CENTER) - Math.max(lo, PLAY_L));

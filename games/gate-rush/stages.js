@@ -198,7 +198,20 @@ function endlessSlot(seed, i) {
   return out;
 }
 
+// 주어진 거리(progress) 이후 처음 등장하는 보스의 병력 수 (게이트 판정 임계값용)
+function nextEndlessBossCount(progress) {
+  let i = Math.max(1, Math.ceil((progress - 700) / MAIN_GAP));
+  for (let k = 0; k < 30; k++) {
+    if (i % 14 === 0 && endlessMainDist(i) >= progress) {
+      return Math.round(40 * (1 + i * 0.16));
+    }
+    i++;
+  }
+  return Math.round(40 * (1 + i * 0.16));
+}
+
   window.MG.STAGES = STAGES;
   window.MG.endlessSlot = endlessSlot;
   window.MG.endlessMainDist = endlessMainDist;
+  window.MG.nextEndlessBossCount = nextEndlessBossCount;
 })();
