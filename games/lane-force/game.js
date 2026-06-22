@@ -167,7 +167,7 @@
     run.enemyT -= dt;
     if (run.enemyT <= 0) {
       run.enemyT = Math.max(0.12, 0.32 - e * 0.006);
-      const hp = 1.5 + e / 5; // 시작 1.5배, 증가 속도 ↑(이전 ⌊e/7⌋ → e/5)
+      const hp = 1 + e / 5; // 시작 1배(원복), 증가 속도 e/5 유지
       const spd = 42 + Math.min(60, e * 0.8);
       const mel = 2 + Math.floor(e / 12);
       for (let s = 0; s < 2; s++) {
@@ -186,7 +186,7 @@
     run.bossT -= dt;
     if (run.bossT <= 0) {
       run.bossT = 14;
-      const hp = Math.round(400 + e * 60);
+      const hp = Math.round(320 + e * 60); // 시작 HP 80%(400→320)
       run.enemies.push({
         x: laneCenter(1),
         y: -40,
@@ -237,7 +237,7 @@
           en.engaged = true;
         }
       }
-      if (en.engaged) drain += en.mel * dt * 0.25; // 드레인 속도 1/4
+      if (en.engaged) drain += en.mel * dt * 0.1; // 드레인 속도 1/10
     }
     if (drain > 0) {
       run.army -= drain;
