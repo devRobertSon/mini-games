@@ -604,7 +604,13 @@
       keys.right = true;
       e.preventDefault();
     }
-    if (e.key === "Escape" && state === "playing") pause();
+    if (
+      (e.key === "Escape" || e.key === " " || e.key === "Spacebar") &&
+      state === "playing"
+    ) {
+      e.preventDefault();
+      pause();
+    }
   });
   window.addEventListener("keyup", (e) => {
     if (["ArrowLeft", "a", "A"].includes(e.key)) keys.left = false;

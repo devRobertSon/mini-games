@@ -209,8 +209,8 @@ body {
 
 .game-btn {
   font-family: var(--pixel-font);
-  font-size: 11px;
-  padding: 14px;
+  font-size: 13px;
+  padding: 15px;
   border: none;
   border-radius: 4px;
   cursor: pointer;
