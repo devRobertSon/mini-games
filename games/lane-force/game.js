@@ -72,7 +72,7 @@
         ? { type: "dmg", val: 5, label: "🔥뎀+5" }
         : { type: "dmg", val: 1, label: "🔥뎀+1" };
     const hp = Math.round(40 * Math.pow(1.3, level));
-    return { hp, maxhp: hp, info, level, y };
+    return { hp, maxhp: hp, info, level, y, ty: y }; // ty: 슬라이딩 목표 y
   }
 
   // ---------- 런 생성 ----------
@@ -133,10 +133,11 @@
     const idx = run.weapons.indexOf(w);
     if (idx < 0) return;
     run.weapons.splice(idx, 1); // 부서진 무기 제거 → 뒤 무기들이 앞으로 당겨짐
-    // 맨 뒤에 다음 단계 무기 보충(현재 뒤 무기보다 한 단계 강함)
-    run.weapons.push(makeWeapon(run.weaponLevel + run.weapons.length, 0));
-    // 슬롯 위치 재정렬: index 0 = 가장 앞(아래)
-    run.weapons.forEach((wp, i) => (wp.y = WEAPON_SLOTS_Y[i]));
+    // 맨 뒤에 다음 단계 무기 보충(현재 뒤 무기보다 한 단계 강함). 맨 위 슬롯 위에서 시작해 미끄러져 내려옴
+    const backY = WEAPON_SLOTS_Y[WEAPON_SLOTS_Y.length - 1];
+    run.weapons.push(makeWeapon(run.weaponLevel + run.weapons.length, backY - 90));
+    // 슬롯 목표 위치 재지정: index 0 = 가장 앞(아래). 현재 y는 유지하고 ty로 부드럽게 이동
+    run.weapons.forEach((wp, i) => (wp.ty = WEAPON_SLOTS_Y[i]));
   }
 
   // 총알 1발(관통 없음): 부대 폭 안 한 곳에서 위로 발사, 데미지는 인자로 받음
@@ -282,6 +283,14 @@
         floatText("-" + formatNum(run.meleeAcc), run.px, SQUAD_Y - 80, "#ff3b5c");
         run.meleeAcc = 0;
         run.meleeTextT = 0.5;
+      }
+    }
+
+    // 무기 슬라이딩: 목표 슬롯(ty)으로 부드럽지만 빠르게 이동
+    for (const w of run.weapons) {
+      if (w.y !== w.ty) {
+        w.y += (w.ty - w.y) * Math.min(1, 22 * dt);
+        if (Math.abs(w.ty - w.y) < 0.5) w.y = w.ty;
       }
     }
 
