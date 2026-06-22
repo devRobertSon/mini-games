@@ -88,7 +88,7 @@
       gateT: 0,
       enemyT: 0.3,
       bossT: 14,
-      fireT: 0,
+      fireAcc: 0,
       flash: 0,
       borderFlash: 0,
       floats: [],
@@ -126,20 +126,15 @@
     if (idx >= 0) run.weapons[idx] = makeWeapon(run.weaponLevel, w.y);
   }
 
-  // 일제사격: 병사 수만큼(상한 16) 총알. 각 총알은 데미지 예산(power)을 갖고 관통.
-  function spawnVolley() {
-    const n = Math.floor(run.army);
-    if (n <= 0) return;
-    const nb = Math.min(n, 16);
-    const power = (run.dmg * n) / nb; // 합계 데미지 = 병사수 × 데미지
-    for (let i = 0; i < nb; i++) {
-      run.bullets.push({
-        x: run.px + ((nb === 1 ? 0.5 : i / (nb - 1)) - 0.5) * 96,
-        y: SQUAD_Y - 24,
-        vy: -560,
-        power,
-      });
-    }
+  // 총알 1발(관통 없음): 병사 위치(부대 폭) 중 한 곳에서 위로 발사, 데미지 = run.dmg
+  const MAX_BULLETS = 320; // 동시 총알 상한(성능)
+  function spawnBullet() {
+    run.bullets.push({
+      x: run.px + (Math.random() - 0.5) * 96,
+      y: SQUAD_Y - 24,
+      vy: -560,
+      dmg: run.dmg,
+    });
   }
 
   // ===========================================================================
@@ -196,12 +191,12 @@
       });
     }
 
-    // 일제사격: 항상 발사 (총알이 실제로 맞아야 피해가 들어간다)
-    run.fireT -= dt;
-    if (run.fireT <= 0) {
-      run.fireT = 1 / Math.max(0.5, run.fireRate);
-      spawnVolley();
-    }
+    // 발사: 병사 1명당 초당 fireRate발 (일제사격 아님, 누적분만큼 개별 발사)
+    run.fireAcc += run.army * run.fireRate * dt;
+    let toFire = Math.floor(run.fireAcc);
+    run.fireAcc -= toFire;
+    toFire = Math.min(toFire, MAX_BULLETS - run.bullets.length);
+    for (let i = 0; i < toFire; i++) spawnBullet();
 
     // 이동: 게이트(느리게). 성장 레인에서 도달하면 +1
     const scroll = 55;
@@ -229,30 +224,26 @@
     }
     run.enemies = run.enemies.filter((en) => !en.dead);
 
-    // 이동 + 충돌: 총알(관통). 무기/적에 실제로 닿아야 피해.
+    // 이동 + 충돌: 총알(관통 없음). 닿은 칸의 "맨 앞(가까운) 적"부터 1발씩 피해.
     const wx = laneCenter(2);
     for (const b of run.bullets) {
       b.y += b.vy * dt;
-      if (b.y < -10 || b.power <= 0) {
+      if (b.y < -10) {
         b.dead = true;
         continue;
       }
-      // 무기 스택(가까운=y 큰 것 우선)
+      // 무기 스택: 같은 칸(x)에서 가장 가까운(y 큰) 무기 1개
       let tw = null;
       for (const w of run.weapons)
         if (Math.abs(b.x - wx) < 30 && Math.abs(b.y - w.y) < 20)
           if (!tw || w.y > tw.y) tw = w;
       if (tw) {
-        const used = Math.min(b.power, tw.hp);
-        tw.hp -= used;
-        b.power -= used;
+        tw.hp -= b.dmg;
+        b.dead = true;
         if (tw.hp <= 0) destroyWeapon(tw);
-        if (b.power <= 0) {
-          b.dead = true;
-          continue;
-        }
+        continue;
       }
-      // 적(가까운=y 큰 것 우선)
+      // 적: 총알 x칸에서 가장 앞쪽(y 큰) 적 1마리만 피해, 총알 소멸
       let te = null;
       for (const en of run.enemies) {
         if (en.dead) continue;
@@ -262,11 +253,9 @@
           if (!te || en.y > te.y) te = en;
       }
       if (te) {
-        const used = Math.min(b.power, te.hp);
-        te.hp -= used;
-        b.power -= used;
+        te.hp -= b.dmg;
+        b.dead = true;
         if (te.hp <= 0) killEnemy(te);
-        if (b.power <= 0) b.dead = true;
       }
     }
     run.bullets = run.bullets.filter((b) => !b.dead);
