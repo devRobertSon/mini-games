@@ -186,7 +186,7 @@
     run.bossT -= dt;
     if (run.bossT <= 0) {
       run.bossT = 14;
-      const hp = Math.round(320 + e * 60); // 시작 HP 80%(400→320)
+      const hp = Math.round(320 + e * 30); // 시작 320, 증가속도 절반(60→30)
       run.enemies.push({
         x: laneCenter(1),
         y: -40,
@@ -237,7 +237,8 @@
           en.engaged = true;
         }
       }
-      if (en.engaged) drain += en.mel * dt * 0.1; // 드레인 속도 1/10
+      // 졸병 드레인 0.1, 보스는 추가로 0.1배 → 0.01
+      if (en.engaged) drain += en.mel * dt * (en.boss ? 0.01 : 0.1);
     }
     if (drain > 0) {
       run.army -= drain;
