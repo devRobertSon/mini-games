@@ -165,7 +165,7 @@
     run.enemyT -= dt;
     if (run.enemyT <= 0) {
       run.enemyT = Math.max(0.12, 0.32 - e * 0.006);
-      const hp = 1 + Math.floor(e / 7);
+      const hp = 2 + Math.floor(e / 7); // 시작 체력 2배(1→2)
       const spd = 42 + Math.min(60, e * 0.8);
       const mel = 2 + Math.floor(e / 12);
       for (let s = 0; s < 2; s++) {
@@ -184,7 +184,7 @@
     run.bossT -= dt;
     if (run.bossT <= 0) {
       run.bossT = 14;
-      const hp = Math.round(400 + e * 60);
+      const hp = Math.round(480 + e * 60); // 시작 체력 +20%(400→480)
       run.enemies.push({
         x: laneCenter(1),
         y: -40,
