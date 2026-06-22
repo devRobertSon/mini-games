@@ -91,7 +91,7 @@
       kills: restore ? restore.kills || 0 : 0,
       score: restore ? restore.score || 0 : 0,
       gateT: 0,
-      enemyT: 0.3,
+      enemyAcc: 0,
       bossT: 14,
       fireAcc: 0,
       flash: 0,
@@ -176,17 +176,24 @@
       run.gateT = 0.4;
       run.gates.push({ y: -16 });
     }
-    // 스폰: 졸병 (밀도 2배 + 시간 지날수록 더 강하고 빠르게)
-    run.enemyT -= dt;
-    if (run.enemyT <= 0) {
-      run.enemyT = Math.max(0, 0.32 - D * 0.006); // 스폰 간격 하한 없음, 줄어드는 속도 원래값
+    // 스폰: 졸병 — 생성률(초당)이 D=0의 6마리 → D=180(3분)에 600마리로 상한.
+    //   ease-in(제곱) 곡선이라 초반은 완만, 3분 직전에 급증.
+    const gruntRate = Math.min(600, 6 + 594 * Math.pow(Math.min(1, D / 180), 2));
+    run.enemyAcc += gruntRate * dt;
+    let nSpawn = Math.floor(run.enemyAcc);
+    run.enemyAcc -= nSpawn;
+    if (nSpawn > 60) {
+      run.enemyAcc += nSpawn - 60; // 한 프레임 폭주 방지(누적은 보존)
+      nSpawn = 60;
+    }
+    if (nSpawn > 0) {
       const hp = 1 + D / 5; // 시작 1배(원복), 증가 속도 D/5
       const spd = 42 + Math.min(68, D * 0.8); // 최대 110
       const mel = Math.min(30, 2 + Math.floor(D / 12)); // 근접피해 상한 30
-      for (let s = 0; s < 2; s++) {
+      for (let i = 0; i < nSpawn; i++) {
         run.enemies.push({
           x: laneCenter(1) + (Math.random() - 0.5) * (LANE_W - 26),
-          y: -16 - s * 26,
+          y: -16 - Math.random() * 60,
           hp,
           maxhp: hp,
           spd,
