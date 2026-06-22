@@ -72,7 +72,7 @@
         ? { type: "dmg", val: 5, label: "🔥뎀+5" }
         : { type: "dmg", val: 1, label: "🔥뎀+1" };
     const hp = Math.round(40 * Math.pow(1.3, level));
-    return { hp, maxhp: hp, info, level, y, ty: y }; // ty: 슬라이딩 목표 y
+    return { hp, maxhp: hp, info, level, y, ty: y, glow: 0 }; // ty: 슬라이딩 목표 y, glow: 내려온 강조
   }
 
   // ---------- 런 생성 ----------
@@ -136,8 +136,12 @@
     // 맨 뒤에 다음 단계 무기 보충(현재 뒤 무기보다 한 단계 강함). 맨 위 슬롯 위에서 시작해 미끄러져 내려옴
     const backY = WEAPON_SLOTS_Y[WEAPON_SLOTS_Y.length - 1];
     run.weapons.push(makeWeapon(run.weaponLevel + run.weapons.length, backY - 90));
-    // 슬롯 목표 위치 재지정: index 0 = 가장 앞(아래). 현재 y는 유지하고 ty로 부드럽게 이동
-    run.weapons.forEach((wp, i) => (wp.ty = WEAPON_SLOTS_Y[i]));
+    // 슬롯 목표 위치 재지정: index 0 = 가장 앞(아래). 현재 y는 유지하고 ty로 부드럽게 이동.
+    // 한 칸씩 내려오는 무기를 잠깐 강조(glow).
+    run.weapons.forEach((wp, i) => {
+      wp.ty = WEAPON_SLOTS_Y[i];
+      wp.glow = 1;
+    });
   }
 
   // 총알 1발(관통 없음): 부대 폭 안 한 곳에서 위로 발사, 데미지는 인자로 받음
@@ -286,12 +290,13 @@
       }
     }
 
-    // 무기 슬라이딩: 목표 슬롯(ty)으로 부드럽지만 빠르게 이동
+    // 무기 슬라이딩: 목표 슬롯(ty)으로 부드럽지만 빠르게 이동 + 강조 효과 감쇠
     for (const w of run.weapons) {
       if (w.y !== w.ty) {
         w.y += (w.ty - w.y) * Math.min(1, 22 * dt);
         if (Math.abs(w.ty - w.y) < 0.5) w.y = w.ty;
       }
+      if (w.glow > 0) w.glow -= dt * 2; // 약 0.5초간 강조
     }
 
     // 이동 + 충돌: 총알(관통 없음). 닿은 칸의 "맨 앞(가까운) 적"부터 1발씩 피해.
@@ -440,11 +445,25 @@
   function drawWeapons() {
     const cx = laneCenter(2);
     const halfW = LANE_W / 2 - 4; // 레인 전체 폭 채움
+    // 고정 슬롯 번호: 총알이 처음 닿는 맨 아래 칸 = 1, 위로 갈수록 +1
+    ctx.fillStyle = "rgba(159,180,255,0.55)";
+    ctx.font = '7px "Press Start 2P", monospace';
+    ctx.textAlign = "left";
+    ctx.textBaseline = "middle";
+    for (let i = 0; i < WEAPON_SLOTS_Y.length; i++) {
+      ctx.fillText(String(i + 1), cx - halfW + 4, WEAPON_SLOTS_Y[i] - 9);
+    }
     for (const w of run.weapons) {
       ctx.fillStyle = "#2a3550";
       ctx.fillRect(cx - halfW, w.y - 15, halfW * 2, 30);
       ctx.fillStyle = "#9fb4ff";
       ctx.fillRect(cx - halfW, w.y - 15, halfW * 2, 3);
+      // 막 내려온 무기 강조(테두리)
+      if (w.glow > 0) {
+        ctx.strokeStyle = "rgba(92,255,143," + Math.min(1, w.glow) + ")";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(cx - halfW + 1.5, w.y - 15 + 1.5, halfW * 2 - 3, 27);
+      }
       hpBar(cx - halfW, w.y - 26, halfW * 2, w.hp / w.maxhp);
       ctx.fillStyle = "#ffd54d";
       ctx.font = '7px "Press Start 2P", monospace';
