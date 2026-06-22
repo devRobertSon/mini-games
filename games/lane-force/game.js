@@ -145,6 +145,9 @@
   // ===========================================================================
   function update(dt) {
     const e = (run.elapsed += dt);
+    // 난이도 시간 D: 1000점 전에는 경과시간과 동일, 1000점 초과분에 비례해 가산
+    // → 1000점 이후부터 적 강화 증가폭이 커진다.
+    const D = e + Math.max(0, run.score - 1000) * 0.1;
 
     // 이동
     const dir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
@@ -166,10 +169,10 @@
     // 스폰: 졸병 (밀도 2배 + 시간 지날수록 더 강하고 빠르게)
     run.enemyT -= dt;
     if (run.enemyT <= 0) {
-      run.enemyT = Math.max(0.12, 0.32 - e * 0.006);
-      const hp = 1 + e / 5; // 시작 1배(원복), 증가 속도 e/5 유지
-      const spd = 42 + Math.min(60, e * 0.8);
-      const mel = 2 + Math.floor(e / 12);
+      run.enemyT = Math.max(0.12, 0.32 - D * 0.006);
+      const hp = 1 + D / 5; // 시작 1배(원복), 증가 속도 D/5
+      const spd = 42 + Math.min(60, D * 0.8);
+      const mel = 2 + Math.floor(D / 12);
       for (let s = 0; s < 2; s++) {
         run.enemies.push({
           x: laneCenter(1) + (Math.random() - 0.5) * (LANE_W - 26),
@@ -186,14 +189,14 @@
     run.bossT -= dt;
     if (run.bossT <= 0) {
       run.bossT = 14;
-      const hp = Math.round(320 + e * 30); // 시작 320, 증가속도 절반(60→30)
+      const hp = Math.round(320 + D * 30); // 시작 320, 증가속도 D 기준
       run.enemies.push({
         x: laneCenter(1),
         y: -40,
         hp,
         maxhp: hp,
         spd: 26,
-        mel: Math.round(50 + e),
+        mel: Math.round(50 + D),
         boss: true,
       });
     }
