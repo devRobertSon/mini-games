@@ -92,6 +92,8 @@
       flash: 0,
       borderFlash: 0,
       floats: [],
+      meleeAcc: 0,
+      meleeTextT: 0,
       ended: false,
     };
     run.weapons = WEAPON_SLOTS_Y.map((y, i) => makeWeapon(run.weaponLevel + i, y));
@@ -184,7 +186,7 @@
     run.bossT -= dt;
     if (run.bossT <= 0) {
       run.bossT = 14;
-      const hp = Math.round(480 + e * 60); // 시작 체력 +20%(400→480)
+      const hp = Math.round(400 + e * 60);
       run.enemies.push({
         x: laneCenter(1),
         y: -40,
@@ -223,17 +225,31 @@
     }
     run.gates = run.gates.filter((g) => !g.dead);
 
-    // 이동: 적. 스쿼드 라인 도달 시 근접 피해
+    // 이동: 적. 부대 앞(MELEE_Y)에 도달하면 멈춰서, 죽을 때까지 병력을 계속 깎는다.
+    // (즉시 제거/즉사 아님 — 총알로 처치해야 사라짐)
+    const MELEE_Y = SQUAD_Y - 50;
+    let drain = 0;
     for (const en of run.enemies) {
-      en.y += en.spd * dt;
-      if (en.y >= SQUAD_Y) {
-        const m = Math.min(run.army, en.mel);
-        run.army -= m;
-        triggerDamage(m);
-        en.dead = true;
+      if (!en.engaged) {
+        en.y += en.spd * dt;
+        if (en.y >= MELEE_Y) {
+          en.y = MELEE_Y;
+          en.engaged = true;
+        }
+      }
+      if (en.engaged) drain += en.mel * dt; // 초당 en.mel 만큼 병력 감소
+    }
+    if (drain > 0) {
+      run.army -= drain;
+      run.borderFlash = Math.max(run.borderFlash, 0.25);
+      run.meleeAcc += drain;
+      run.meleeTextT -= dt;
+      if (run.meleeTextT <= 0) {
+        floatText("-" + formatNum(run.meleeAcc), run.px, SQUAD_Y - 80, "#ff3b5c");
+        run.meleeAcc = 0;
+        run.meleeTextT = 0.5;
       }
     }
-    run.enemies = run.enemies.filter((en) => !en.dead);
 
     // 이동 + 충돌: 총알(관통 없음). 닿은 칸의 "맨 앞(가까운) 적"부터 1발씩 피해.
     const wx = laneCenter(2);
