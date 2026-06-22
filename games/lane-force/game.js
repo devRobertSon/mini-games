@@ -167,7 +167,7 @@
     run.enemyT -= dt;
     if (run.enemyT <= 0) {
       run.enemyT = Math.max(0.12, 0.32 - e * 0.006);
-      const hp = 2 + Math.floor(e / 7); // 시작 체력 2배(1→2)
+      const hp = 1.5 + e / 5; // 시작 1.5배, 증가 속도 ↑(이전 ⌊e/7⌋ → e/5)
       const spd = 42 + Math.min(60, e * 0.8);
       const mel = 2 + Math.floor(e / 12);
       for (let s = 0; s < 2; s++) {
@@ -237,7 +237,7 @@
           en.engaged = true;
         }
       }
-      if (en.engaged) drain += en.mel * dt; // 초당 en.mel 만큼 병력 감소
+      if (en.engaged) drain += en.mel * dt * 0.25; // 드레인 속도 1/4
     }
     if (drain > 0) {
       run.army -= drain;
