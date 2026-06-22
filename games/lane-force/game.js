@@ -176,9 +176,12 @@
       run.gateT = 0.4;
       run.gates.push({ y: -16 });
     }
-    // 스폰: 졸병 — 생성률(초당)이 D=0의 6마리 → D=180(3분)에 600마리로 상한.
+    // 스폰: 졸병 — 생성률(초당)이 D=0의 6마리 → D=180(3분)에 200마리로 상한.
     //   ease-in(제곱) 곡선이라 초반은 완만, 3분 직전에 급증.
-    const gruntRate = Math.min(600, 6 + 594 * Math.pow(Math.min(1, D / 180), 2));
+    //   200 도달 후에는 "더 늘어나려던 생성률(초과분)의 절반"을 졸병 체력에 가산.
+    const rateRaw = 6 + 194 * Math.pow(D / 180, 2); // 상한 없는 원곡선
+    const gruntRate = Math.min(200, rateRaw);
+    const overflow = rateRaw - gruntRate; // 200 초과분(늘어나려던 수)
     run.enemyAcc += gruntRate * dt;
     let nSpawn = Math.floor(run.enemyAcc);
     run.enemyAcc -= nSpawn;
@@ -187,7 +190,7 @@
       nSpawn = 60;
     }
     if (nSpawn > 0) {
-      const hp = 1 + D / 5; // 시작 1배(원복), 증가 속도 D/5
+      const hp = 1 + D / 5 + overflow * 0.5; // 기본 성장 + 200 초과분의 절반을 체력에 가산
       const spd = 42 + Math.min(68, D * 0.8); // 최대 110
       const mel = Math.min(30, 2 + Math.floor(D / 12)); // 근접피해 상한 30
       for (let i = 0; i < nSpawn; i++) {
