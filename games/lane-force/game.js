@@ -445,14 +445,6 @@
   function drawWeapons() {
     const cx = laneCenter(2);
     const halfW = LANE_W / 2 - 4; // 레인 전체 폭 채움
-    // 고정 슬롯 번호: 총알이 처음 닿는 맨 아래 칸 = 1, 위로 갈수록 +1
-    ctx.fillStyle = "rgba(159,180,255,0.55)";
-    ctx.font = '7px "Press Start 2P", monospace';
-    ctx.textAlign = "left";
-    ctx.textBaseline = "middle";
-    for (let i = 0; i < WEAPON_SLOTS_Y.length; i++) {
-      ctx.fillText(String(i + 1), cx - halfW + 4, WEAPON_SLOTS_Y[i] - 9);
-    }
     for (const w of run.weapons) {
       ctx.fillStyle = "#2a3550";
       ctx.fillRect(cx - halfW, w.y - 15, halfW * 2, 30);
@@ -465,11 +457,16 @@
         ctx.strokeRect(cx - halfW + 1.5, w.y - 15 + 1.5, halfW * 2 - 3, 27);
       }
       hpBar(cx - halfW, w.y - 26, halfW * 2, w.hp / w.maxhp);
-      ctx.fillStyle = "#ffd54d";
+      // 무기 일련번호(레벨+1): 무기를 따라 이동. 새 무기일수록 6,7,8…로 증가
+      ctx.fillStyle = "rgba(159,180,255,0.85)";
       ctx.font = '7px "Press Start 2P", monospace';
-      ctx.textAlign = "center";
+      ctx.textAlign = "left";
       ctx.textBaseline = "middle";
-      ctx.fillText(w.info.label, cx, w.y + 1);
+      ctx.fillText("#" + (w.level + 1), cx - halfW + 4, w.y - 8);
+      // 보상 라벨
+      ctx.fillStyle = "#ffd54d";
+      ctx.textAlign = "center";
+      ctx.fillText(w.info.label, cx, w.y + 4);
     }
   }
 
