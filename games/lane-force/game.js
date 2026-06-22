@@ -161,13 +161,13 @@
       run.gateT = 0.4;
       run.gates.push({ y: -16 });
     }
-    // 스폰: 졸병 (밀도 2배: 한 번에 2마리, 시간 지날수록 더 강함)
+    // 스폰: 졸병 (밀도 2배 + 시간 지날수록 더 강하고 빠르게)
     run.enemyT -= dt;
     if (run.enemyT <= 0) {
-      run.enemyT = Math.max(0.16, 0.34 - e * 0.004);
-      const hp = 1 + Math.floor(e / 9); // 더 빨리 단단해짐
-      const spd = 38 + Math.min(46, e * 0.6);
-      const mel = 2 + Math.floor(e / 16);
+      run.enemyT = Math.max(0.12, 0.32 - e * 0.006);
+      const hp = 1 + Math.floor(e / 7);
+      const spd = 42 + Math.min(60, e * 0.8);
+      const mel = 2 + Math.floor(e / 12);
       for (let s = 0; s < 2; s++) {
         run.enemies.push({
           x: laneCenter(1) + (Math.random() - 0.5) * (LANE_W - 26),
@@ -180,18 +180,18 @@
         });
       }
     }
-    // 스폰: 보스 (느림)
+    // 스폰: 보스 — 졸병보다 HP·근접피해가 압도적으로 큼
     run.bossT -= dt;
     if (run.bossT <= 0) {
       run.bossT = 14;
-      const hp = Math.round(140 * (1 + e / 12));
+      const hp = Math.round(400 + e * 60);
       run.enemies.push({
         x: laneCenter(1),
         y: -40,
         hp,
         maxhp: hp,
         spd: 26,
-        mel: 15 + Math.floor(e / 3),
+        mel: Math.round(50 + e),
         boss: true,
       });
     }
