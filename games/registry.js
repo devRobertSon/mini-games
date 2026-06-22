@@ -28,20 +28,18 @@ window.MG.GAMES = [
   },
 
   {
-    id: "topwar",
-    title: "TOP WAR",
-    desc: "게이트로 병력 수와 화력 등급(★)을 키워 전투력으로 적과 보스를 돌파! 수를 늘릴까 등급을 올릴까 선택하는 머지형 게이트 러너.",
-    path: "games/topwar/index.html",
+    id: "lane-force",
+    title: "LANE FORCE",
+    desc: "3개 레인을 오가며 병사를 모으고(성장), 적을 쏘고(방어), 무기를 부숴 업그레이드하는 실시간 사격 생존 게임. 멀리서 막지 못하면 병사가 줄어든다!",
+    path: "games/lane-force/index.html",
     icon: "🪖",
-    banner: "linear-gradient(135deg,#3a3a1a 0%,#ffd54d 100%)",
-    tags: ["액션", "머지", "픽셀"],
+    banner: "linear-gradient(135deg,#1a2a3a 0%,#4dd0e1 100%)",
+    tags: ["액션", "슈팅", "픽셀"],
     available: true,
     badge(save) {
       if (!save) return null;
       const parts = [];
-      if (save.progress?.unlocked > 1) {
-        parts.push("최고 STAGE " + (save.progress.unlocked - 1));
-      }
+      if (save.bestScore > 0) parts.push("최고 " + save.bestScore + "점");
       if (save.slot) parts.push("이어하기 ●");
       return parts.length ? parts.join(" · ") : null;
     },
