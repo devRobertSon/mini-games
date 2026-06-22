@@ -134,8 +134,8 @@
   }
 
   // 총알 1발(관통 없음): 부대 폭 안 한 곳에서 위로 발사, 데미지는 인자로 받음
-  const MAX_BULLETS = 90; // 동시 총알 상한(보이는 수 절감)
-  const SHOOTER_CAP = 20; // 동시 사격 "대표" 병사 수 상한
+  const MAX_BULLETS = 200; // 동시 총알 상한(보이는 수)
+  const SHOOTER_CAP = 50; // 동시 사격 "대표" 병사 수 상한
   const BULLET_SPREAD = 96; // 발사 폭(레인 폭보다 좁게 유지)
   function spawnBullet(dmg) {
     // 발사 밴드를 플레이 영역 안으로 고정 → 어느 레인이든 동일한 양/패턴으로 발사
@@ -211,15 +211,19 @@
       });
     }
 
-    // 발사: 병사 1명당 초당 fireRate발. 단, 보이는 총알을 줄이려 동시 사격 병사를
-    // SHOOTER_CAP 으로 제한하고 그만큼 한 발의 데미지를 병력에 비례해 키운다.
+    // 발사: 병사 1명당 초당 fireRate발. 동시 사격 병사를 SHOOTER_CAP 까지 보여주고,
+    // 한 발의 데미지를 실제 병력에 비례해 키워 총 화력 = 병력 × 발사속도 × 데미지 유지.
+    // 화면 총알 상한에 막혀 못 쏜 발사분은 누적에 되돌려 화력 손실을 막는다(상한은 backlog로 보존).
     // (총알은 여전히 실제로 날아가 적에 맞아야만 피해 — 자동/관통 아님)
     const shooters = Math.min(Math.floor(run.army), SHOOTER_CAP);
     if (shooters > 0) {
       run.fireAcc += shooters * run.fireRate * dt;
-      let toFire = Math.floor(run.fireAcc);
-      run.fireAcc -= toFire;
-      toFire = Math.min(toFire, MAX_BULLETS - run.bullets.length);
+      const want = Math.floor(run.fireAcc);
+      run.fireAcc -= want;
+      const room = Math.max(0, MAX_BULLETS - run.bullets.length);
+      const toFire = Math.min(want, room);
+      run.fireAcc += want - toFire; // 못 쏜 만큼 되돌림(화력 보존)
+      if (run.fireAcc > MAX_BULLETS) run.fireAcc = MAX_BULLETS; // backlog 폭주 방지
       const bdmg = run.dmg * (run.army / shooters);
       for (let i = 0; i < toFire; i++) spawnBullet(bdmg);
     }
