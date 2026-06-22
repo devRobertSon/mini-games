@@ -266,7 +266,7 @@
       // 무기 스택: 같은 칸(x)에서 가장 가까운(y 큰) 무기 1개
       let tw = null;
       for (const w of run.weapons)
-        if (Math.abs(b.x - wx) < 30 && Math.abs(b.y - w.y) < 20)
+        if (Math.abs(b.x - wx) < LANE_W / 2 && Math.abs(b.y - w.y) < 20)
           if (!tw || w.y > tw.y) tw = w;
       if (tw) {
         tw.hp -= b.dmg;
@@ -400,12 +400,13 @@
 
   function drawWeapons() {
     const cx = laneCenter(2);
+    const halfW = LANE_W / 2 - 4; // 레인 전체 폭 채움
     for (const w of run.weapons) {
       ctx.fillStyle = "#2a3550";
-      ctx.fillRect(cx - 24, w.y - 15, 48, 30);
+      ctx.fillRect(cx - halfW, w.y - 15, halfW * 2, 30);
       ctx.fillStyle = "#9fb4ff";
-      ctx.fillRect(cx - 24, w.y - 15, 48, 3);
-      hpBar(cx - 26, w.y - 26, 52, w.hp / w.maxhp);
+      ctx.fillRect(cx - halfW, w.y - 15, halfW * 2, 3);
+      hpBar(cx - halfW, w.y - 26, halfW * 2, w.hp / w.maxhp);
       ctx.fillStyle = "#ffd54d";
       ctx.font = '7px "Press Start 2P", monospace';
       ctx.textAlign = "center";
