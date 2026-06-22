@@ -63,9 +63,14 @@
   const WEAPON_SLOTS_Y = [440, 360, 280, 200, 120];
   function makeWeapon(level, y) {
     const rate = Math.random() < 0.5;
+    const rare = Math.random() < 0.05; // 5% 확률로 강화판 드랍
     const info = rate
-      ? { type: "rate", val: 0.4, label: "⚡속도+0.4" }
-      : { type: "dmg", val: 1, label: "🔥뎀+1" };
+      ? rare
+        ? { type: "rate", val: 2.5, label: "⚡속도+2.5" }
+        : { type: "rate", val: 0.5, label: "⚡속도+0.5" }
+      : rare
+        ? { type: "dmg", val: 5, label: "🔥뎀+5" }
+        : { type: "dmg", val: 1, label: "🔥뎀+1" };
     const hp = Math.round(40 * Math.pow(1.3, level));
     return { hp, maxhp: hp, info, level, y };
   }
