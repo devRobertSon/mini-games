@@ -170,10 +170,10 @@
     // 스폰: 졸병 (밀도 2배 + 시간 지날수록 더 강하고 빠르게)
     run.enemyT -= dt;
     if (run.enemyT <= 0) {
-      run.enemyT = Math.max(0.12, 0.32 - D * 0.006);
+      run.enemyT = Math.max(0, 0.32 - D * 0.006); // 스폰 간격 하한 없음(무제한)
       const hp = 1 + D / 5; // 시작 1배(원복), 증가 속도 D/5
-      const spd = 42 + Math.min(60, D * 0.8);
-      const mel = 2 + Math.floor(D / 12);
+      const spd = 42 + Math.min(68, D * 0.8); // 최대 110
+      const mel = Math.min(30, 2 + Math.floor(D / 12)); // 근접피해 상한 30
       for (let s = 0; s < 2; s++) {
         run.enemies.push({
           x: laneCenter(1) + (Math.random() - 0.5) * (LANE_W - 26),
@@ -197,7 +197,7 @@
         hp,
         maxhp: hp,
         spd: 26,
-        mel: Math.round(50 + D),
+        mel: Math.min(300, Math.round(50 + D)), // 근접피해 상한 300
         boss: true,
       });
     }
