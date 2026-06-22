@@ -190,7 +190,7 @@
       nSpawn = 60;
     }
     if (nSpawn > 0) {
-      const hp = 1 + D / 5 + overflow * 0.5; // 기본 성장 + 50 초과분의 절반을 체력에 가산
+      const hp = 1 + D / 5 + overflow * 0.1; // 기본 성장 + 50 초과분의 1/10을 체력에 가산
       const spd = 42 + Math.min(68, D * 0.8); // 최대 110
       const mel = Math.min(30, 2 + Math.floor(D / 12)); // 근접피해 상한 30
       for (let i = 0; i < nSpawn; i++) {
