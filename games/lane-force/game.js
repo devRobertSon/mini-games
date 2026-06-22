@@ -63,7 +63,7 @@
   const WEAPON_SLOTS_Y = [440, 360, 280, 200, 120];
   function makeWeapon(level, y) {
     const rate = Math.random() < 0.5;
-    const rare = Math.random() < 0.05; // 5% 확률로 강화판 드랍
+    const rare = Math.random() < 0.01; // 1% 확률로 강화판 드랍
     const info = rate
       ? rare
         ? { type: "rate", val: 2.5, label: "⚡속도+2.5" }
@@ -136,9 +136,13 @@
   // 총알 1발(관통 없음): 부대 폭 안 한 곳에서 위로 발사, 데미지는 인자로 받음
   const MAX_BULLETS = 90; // 동시 총알 상한(보이는 수 절감)
   const SHOOTER_CAP = 20; // 동시 사격 "대표" 병사 수 상한
+  const BULLET_SPREAD = 96; // 발사 폭(레인 폭보다 좁게 유지)
   function spawnBullet(dmg) {
+    // 발사 밴드를 플레이 영역 안으로 고정 → 어느 레인이든 동일한 양/패턴으로 발사
+    const half = BULLET_SPREAD / 2;
+    const cx = Math.max(PLAY_L + half, Math.min(PLAY_R - half, run.px));
     run.bullets.push({
-      x: run.px + (Math.random() - 0.5) * 96,
+      x: cx + (Math.random() - 0.5) * BULLET_SPREAD,
       y: SQUAD_Y - 24,
       vy: -560,
       dmg,
@@ -631,12 +635,14 @@
       keys.right = true;
       e.preventDefault();
     }
-    if (
-      (e.key === "Escape" || e.key === " " || e.key === "Spacebar") &&
-      state === "playing"
-    ) {
-      e.preventDefault();
-      pause();
+    if (e.key === "Escape" || e.key === " " || e.key === "Spacebar") {
+      if (state === "playing") {
+        e.preventDefault();
+        pause();
+      } else if (state === "paused") {
+        e.preventDefault();
+        resume();
+      }
     }
   });
   window.addEventListener("keyup", (e) => {
