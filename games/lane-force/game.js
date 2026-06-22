@@ -33,7 +33,6 @@
   const PLAY_R = 360;
   const LANE_W = (PLAY_R - PLAY_L) / 3;
   const SQUAD_Y = 610;
-  const WEAPON_Y = 180;
   const LANE_NAMES = ["성장", "적", "무기"];
   const laneOf = (px) =>
     Math.min(2, Math.max(0, Math.floor((px - PLAY_L) / LANE_W)));
@@ -60,13 +59,15 @@
   let state = "menu";
 
   // ---------- 무기 생성 ----------
-  function makeWeapon(level) {
+  // 무기 5개 스택 (아래=가까움 → 위, 정지)
+  const WEAPON_SLOTS_Y = [440, 360, 280, 200, 120];
+  function makeWeapon(level, y) {
     const rate = Math.random() < 0.5;
     const info = rate
-      ? { type: "rate", val: 0.4, label: "⚡ 발사속도 +0.4" }
-      : { type: "dmg", val: 1, label: "🔥 데미지 +1" };
-    const hp = Math.round(80 * Math.pow(1.55, level));
-    return { hp, maxhp: hp, info, level };
+      ? { type: "rate", val: 0.4, label: "⚡속도+0.4" }
+      : { type: "dmg", val: 1, label: "🔥뎀+1" };
+    const hp = Math.round(40 * Math.pow(1.3, level));
+    return { hp, maxhp: hp, info, level, y };
   }
 
   // ---------- 런 생성 ----------
@@ -80,20 +81,20 @@
       gates: [],
       bullets: [],
       weaponLevel: restore ? restore.weaponLevel : 0,
-      weapon: null,
+      weapons: [],
       elapsed: restore ? restore.elapsed : 0,
       kills: restore ? restore.kills || 0 : 0,
       score: restore ? restore.score || 0 : 0,
       gateT: 0,
-      enemyT: 0.6,
-      bossT: 16,
+      enemyT: 0.3,
+      bossT: 14,
       fireT: 0,
       flash: 0,
       borderFlash: 0,
       floats: [],
       ended: false,
     };
-    run.weapon = makeWeapon(run.weaponLevel);
+    run.weapons = WEAPON_SLOTS_Y.map((y, i) => makeWeapon(run.weaponLevel + i, y));
   }
 
   // ---------- 효과 텍스트 ----------
@@ -113,23 +114,32 @@
     run.score += en.boss ? 25 : 1;
     if (en.boss) run.flash = 0.18;
   }
-  function upgradeWeapon() {
-    const w = run.weapon;
-    if (w.info.type === "rate") run.fireRate = +(run.fireRate + w.info.val).toFixed(2);
+  // 무기 파괴 → 정보대로 업그레이드 + 같은 칸에 더 강한 무기 보충(항상 5개)
+  function destroyWeapon(w) {
+    if (w.info.type === "rate")
+      run.fireRate = +(run.fireRate + w.info.val).toFixed(2);
     else run.dmg += w.info.val;
-    floatText(w.info.label, laneCenter(2), WEAPON_Y, "#ffd54d");
-    run.flash = 0.14;
+    floatText(w.info.label, laneCenter(2), w.y, "#ffd54d");
+    run.flash = 0.12;
     run.weaponLevel++;
-    run.weapon = makeWeapon(run.weaponLevel);
+    const idx = run.weapons.indexOf(w);
+    if (idx >= 0) run.weapons[idx] = makeWeapon(run.weaponLevel, w.y);
   }
 
-  function spawnBullet() {
-    run.bullets.push({
-      x: run.px + (Math.random() - 0.5) * 18,
-      y: SQUAD_Y - 20,
-      vy: -720,
-      life: 0.7,
-    });
+  // 일제사격: 병사 수만큼(상한 16) 총알. 각 총알은 데미지 예산(power)을 갖고 관통.
+  function spawnVolley() {
+    const n = Math.floor(run.army);
+    if (n <= 0) return;
+    const nb = Math.min(n, 16);
+    const power = (run.dmg * n) / nb; // 합계 데미지 = 병사수 × 데미지
+    for (let i = 0; i < nb; i++) {
+      run.bullets.push({
+        x: run.px + ((nb === 1 ? 0.5 : i / (nb - 1)) - 0.5) * 96,
+        y: SQUAD_Y - 24,
+        vy: -560,
+        power,
+      });
+    }
   }
 
   // ===========================================================================
@@ -149,65 +159,52 @@
     run.px = Math.max(PLAY_L + 12, Math.min(PLAY_R - 12, run.px));
     const lane = laneOf(run.px);
 
-    // 스폰: 성장 게이트
+    // 스폰: 성장 게이트 (레인 전체 폭, 빽빽하게, 느리게)
     run.gateT -= dt;
     if (run.gateT <= 0) {
-      run.gateT = 0.6;
-      run.gates.push({ x: laneCenter(0) + (Math.random() - 0.5) * 50, y: -20 });
+      run.gateT = 0.4;
+      run.gates.push({ y: -16 });
     }
-    // 스폰: 졸병
+    // 스폰: 졸병 (빽빽하게, 느리게)
     run.enemyT -= dt;
     if (run.enemyT <= 0) {
-      run.enemyT = Math.max(0.3, 0.9 - e * 0.012);
-      const hp = 1 + Math.floor(e / 16);
+      run.enemyT = Math.max(0.16, 0.34 - e * 0.004);
+      const hp = 1 + Math.floor(e / 14);
       run.enemies.push({
-        x: laneCenter(1) + (Math.random() - 0.5) * 60,
-        y: -20,
+        x: laneCenter(1) + (Math.random() - 0.5) * (LANE_W - 26),
+        y: -16,
         hp,
         maxhp: hp,
-        spd: 70 + Math.min(95, e * 1.5),
+        spd: 38 + Math.min(42, e * 0.6),
         mel: 2 + Math.floor(e / 22),
         boss: false,
       });
     }
-    // 스폰: 보스
+    // 스폰: 보스 (느림)
     run.bossT -= dt;
     if (run.bossT <= 0) {
-      run.bossT = 16;
-      const hp = Math.round(160 * (1 + e / 12));
+      run.bossT = 14;
+      const hp = Math.round(140 * (1 + e / 12));
       run.enemies.push({
         x: laneCenter(1),
-        y: -44,
+        y: -40,
         hp,
         maxhp: hp,
-        spd: 34,
+        spd: 26,
         mel: 15 + Math.floor(e / 3),
         boss: true,
       });
     }
 
-    // 사격(선 레인만): 연속 DPS
-    const dps = run.army * run.fireRate * run.dmg;
-    if (lane === 1) {
-      let target = null;
-      for (const en of run.enemies) if (!target || en.y > target.y) target = en;
-      if (target) {
-        target.hp -= dps * dt;
-        if (target.hp <= 0) killEnemy(target);
-      }
-    } else if (lane === 2 && run.weapon) {
-      run.weapon.hp -= dps * dt;
-      if (run.weapon.hp <= 0) upgradeWeapon();
-    }
-    // 총알 비주얼
+    // 일제사격: 항상 발사 (총알이 실제로 맞아야 피해가 들어간다)
     run.fireT -= dt;
-    if ((lane === 1 || lane === 2) && run.fireT <= 0) {
-      run.fireT = Math.max(0.04, 0.18 / Math.max(1, run.fireRate / 2));
-      spawnBullet();
+    if (run.fireT <= 0) {
+      run.fireT = 1 / Math.max(0.5, run.fireRate);
+      spawnVolley();
     }
 
-    // 이동: 게이트
-    const scroll = 150;
+    // 이동: 게이트(느리게). 성장 레인에서 도달하면 +1
+    const scroll = 55;
     for (const g of run.gates) {
       g.y += scroll * dt;
       if (g.y >= SQUAD_Y) {
@@ -220,7 +217,7 @@
     }
     run.gates = run.gates.filter((g) => !g.dead);
 
-    // 이동: 적
+    // 이동: 적. 스쿼드 라인 도달 시 근접 피해
     for (const en of run.enemies) {
       en.y += en.spd * dt;
       if (en.y >= SQUAD_Y) {
@@ -232,12 +229,48 @@
     }
     run.enemies = run.enemies.filter((en) => !en.dead);
 
-    // 총알
+    // 이동 + 충돌: 총알(관통). 무기/적에 실제로 닿아야 피해.
+    const wx = laneCenter(2);
     for (const b of run.bullets) {
       b.y += b.vy * dt;
-      b.life -= dt;
+      if (b.y < -10 || b.power <= 0) {
+        b.dead = true;
+        continue;
+      }
+      // 무기 스택(가까운=y 큰 것 우선)
+      let tw = null;
+      for (const w of run.weapons)
+        if (Math.abs(b.x - wx) < 30 && Math.abs(b.y - w.y) < 20)
+          if (!tw || w.y > tw.y) tw = w;
+      if (tw) {
+        const used = Math.min(b.power, tw.hp);
+        tw.hp -= used;
+        b.power -= used;
+        if (tw.hp <= 0) destroyWeapon(tw);
+        if (b.power <= 0) {
+          b.dead = true;
+          continue;
+        }
+      }
+      // 적(가까운=y 큰 것 우선)
+      let te = null;
+      for (const en of run.enemies) {
+        if (en.dead) continue;
+        const rx = en.boss ? 24 : 11;
+        const ry = en.boss ? 24 : 12;
+        if (Math.abs(b.x - en.x) < rx && Math.abs(b.y - en.y) < ry)
+          if (!te || en.y > te.y) te = en;
+      }
+      if (te) {
+        const used = Math.min(b.power, te.hp);
+        te.hp -= used;
+        b.power -= used;
+        if (te.hp <= 0) killEnemy(te);
+        if (b.power <= 0) b.dead = true;
+      }
     }
-    run.bullets = run.bullets.filter((b) => b.life > 0 && b.y > -10);
+    run.bullets = run.bullets.filter((b) => !b.dead);
+    run.enemies = run.enemies.filter((en) => !en.dead);
 
     // 효과 감쇠
     if (run.flash > 0) run.flash -= dt;
@@ -301,15 +334,18 @@
   }
 
   function drawGate(g) {
+    // 성장 레인 전체 폭 가로 막대
+    const x1 = PLAY_L + 3;
+    const w = LANE_W - 6;
     ctx.fillStyle = "#1d6b3a";
-    ctx.fillRect(g.x - 26, g.y - 14, 52, 28);
+    ctx.fillRect(x1, g.y - 13, w, 26);
     ctx.fillStyle = "#5cff8f";
-    ctx.fillRect(g.x - 26, g.y - 14, 52, 3);
+    ctx.fillRect(x1, g.y - 13, w, 3);
     ctx.fillStyle = "#fff";
-    ctx.font = '14px "Press Start 2P", monospace';
+    ctx.font = '13px "Press Start 2P", monospace';
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText("+1", g.x, g.y);
+    ctx.fillText("+1", laneCenter(0), g.y);
   }
 
   function drawEnemy(en) {
@@ -342,25 +378,20 @@
     ctx.fillRect(x, y, w * ratio, 3);
   }
 
-  function drawWeapon() {
-    const w = run.weapon;
-    if (!w) return;
+  function drawWeapons() {
     const cx = laneCenter(2);
-    // 받침대 + 포신
-    ctx.fillStyle = "#2a3550";
-    ctx.fillRect(cx - 22, WEAPON_Y - 16, 44, 32);
-    ctx.fillStyle = "#6f86c9";
-    ctx.fillRect(cx - 4, WEAPON_Y - 30, 8, 18);
-    ctx.fillStyle = "#9fb4ff";
-    ctx.fillRect(cx - 22, WEAPON_Y - 16, 44, 3);
-    // HP 바
-    hpBar(cx - 28, WEAPON_Y - 40, 56, w.hp / w.maxhp);
-    // 정보
-    ctx.fillStyle = "#ffd54d";
-    ctx.font = '8px "Press Start 2P", monospace';
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
-    ctx.fillText(w.info.label, cx, WEAPON_Y + 22);
+    for (const w of run.weapons) {
+      ctx.fillStyle = "#2a3550";
+      ctx.fillRect(cx - 24, w.y - 15, 48, 30);
+      ctx.fillStyle = "#9fb4ff";
+      ctx.fillRect(cx - 24, w.y - 15, 48, 3);
+      hpBar(cx - 26, w.y - 26, 52, w.hp / w.maxhp);
+      ctx.fillStyle = "#ffd54d";
+      ctx.font = '7px "Press Start 2P", monospace';
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(w.info.label, cx, w.y + 1);
+    }
   }
 
   const TIER_NONE = ALLY_PAL;
@@ -386,7 +417,7 @@
   function render() {
     ctx.clearRect(0, 0, W, H);
     drawLanes();
-    drawWeapon();
+    drawWeapons();
     for (const g of run.gates) drawGate(g);
     for (const en of run.enemies) drawEnemy(en);
     // 총알
