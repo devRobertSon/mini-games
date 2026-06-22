@@ -64,7 +64,7 @@
   function makeWeapon(level, y) {
     const rate = Math.random() < 0.5;
     const info = rate
-      ? { type: "rate", val: 0.4, label: "⚡속도+0.4" }
+      ? { type: "rate", val: 0.5, label: "⚡속도+0.5" }
       : { type: "dmg", val: 1, label: "🔥뎀+1" };
     const hp = Math.round(40 * Math.pow(1.3, level));
     return { hp, maxhp: hp, info, level, y };
@@ -170,7 +170,7 @@
     // 스폰: 졸병 (밀도 2배 + 시간 지날수록 더 강하고 빠르게)
     run.enemyT -= dt;
     if (run.enemyT <= 0) {
-      run.enemyT = Math.max(0, 0.32 - D * 0.006); // 스폰 간격 하한 없음(무제한)
+      run.enemyT = Math.max(0, 0.32 - D * 0.00012); // 스폰 간격 하한 없음, 줄어드는 속도 1/50
       const hp = 1 + D / 5; // 시작 1배(원복), 증가 속도 D/5
       const spd = 42 + Math.min(68, D * 0.8); // 최대 110
       const mel = Math.min(30, 2 + Math.floor(D / 12)); // 근접피해 상한 30
