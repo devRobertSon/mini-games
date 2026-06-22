@@ -126,14 +126,15 @@
     if (idx >= 0) run.weapons[idx] = makeWeapon(run.weaponLevel, w.y);
   }
 
-  // 총알 1발(관통 없음): 병사 위치(부대 폭) 중 한 곳에서 위로 발사, 데미지 = run.dmg
-  const MAX_BULLETS = 320; // 동시 총알 상한(성능)
-  function spawnBullet() {
+  // 총알 1발(관통 없음): 부대 폭 안 한 곳에서 위로 발사, 데미지는 인자로 받음
+  const MAX_BULLETS = 90; // 동시 총알 상한(보이는 수 절감)
+  const SHOOTER_CAP = 20; // 동시 사격 "대표" 병사 수 상한
+  function spawnBullet(dmg) {
     run.bullets.push({
       x: run.px + (Math.random() - 0.5) * 96,
       y: SQUAD_Y - 24,
       vy: -560,
-      dmg: run.dmg,
+      dmg,
     });
   }
 
@@ -160,20 +161,24 @@
       run.gateT = 0.4;
       run.gates.push({ y: -16 });
     }
-    // 스폰: 졸병 (빽빽하게, 느리게)
+    // 스폰: 졸병 (밀도 2배: 한 번에 2마리, 시간 지날수록 더 강함)
     run.enemyT -= dt;
     if (run.enemyT <= 0) {
       run.enemyT = Math.max(0.16, 0.34 - e * 0.004);
-      const hp = 1 + Math.floor(e / 14);
-      run.enemies.push({
-        x: laneCenter(1) + (Math.random() - 0.5) * (LANE_W - 26),
-        y: -16,
-        hp,
-        maxhp: hp,
-        spd: 38 + Math.min(42, e * 0.6),
-        mel: 2 + Math.floor(e / 22),
-        boss: false,
-      });
+      const hp = 1 + Math.floor(e / 9); // 더 빨리 단단해짐
+      const spd = 38 + Math.min(46, e * 0.6);
+      const mel = 2 + Math.floor(e / 16);
+      for (let s = 0; s < 2; s++) {
+        run.enemies.push({
+          x: laneCenter(1) + (Math.random() - 0.5) * (LANE_W - 26),
+          y: -16 - s * 26,
+          hp,
+          maxhp: hp,
+          spd,
+          mel,
+          boss: false,
+        });
+      }
     }
     // 스폰: 보스 (느림)
     run.bossT -= dt;
@@ -191,12 +196,18 @@
       });
     }
 
-    // 발사: 병사 1명당 초당 fireRate발 (일제사격 아님, 누적분만큼 개별 발사)
-    run.fireAcc += run.army * run.fireRate * dt;
-    let toFire = Math.floor(run.fireAcc);
-    run.fireAcc -= toFire;
-    toFire = Math.min(toFire, MAX_BULLETS - run.bullets.length);
-    for (let i = 0; i < toFire; i++) spawnBullet();
+    // 발사: 병사 1명당 초당 fireRate발. 단, 보이는 총알을 줄이려 동시 사격 병사를
+    // SHOOTER_CAP 으로 제한하고 그만큼 한 발의 데미지를 병력에 비례해 키운다.
+    // (총알은 여전히 실제로 날아가 적에 맞아야만 피해 — 자동/관통 아님)
+    const shooters = Math.min(Math.floor(run.army), SHOOTER_CAP);
+    if (shooters > 0) {
+      run.fireAcc += shooters * run.fireRate * dt;
+      let toFire = Math.floor(run.fireAcc);
+      run.fireAcc -= toFire;
+      toFire = Math.min(toFire, MAX_BULLETS - run.bullets.length);
+      const bdmg = run.dmg * (run.army / shooters);
+      for (let i = 0; i < toFire; i++) spawnBullet(bdmg);
+    }
 
     // 이동: 게이트(느리게). 성장 레인에서 도달하면 +1
     const scroll = 55;
