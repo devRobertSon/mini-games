@@ -121,7 +121,8 @@
     run.score += en.boss ? 25 : 1;
     if (en.boss) run.flash = 0.18;
   }
-  // 무기 파괴 → 정보대로 업그레이드 + 같은 칸에 더 강한 무기 보충(항상 5개)
+  // 무기 파괴 → 정보대로 업그레이드 + 뒤 무기들이 한 칸씩 앞으로 내려오고,
+  // 맨 뒤에만 다음 단계 무기를 보충(항상 5개 유지)
   function destroyWeapon(w) {
     if (w.info.type === "rate")
       run.fireRate = +(run.fireRate + w.info.val).toFixed(2);
@@ -130,7 +131,12 @@
     run.flash = 0.12;
     run.weaponLevel++;
     const idx = run.weapons.indexOf(w);
-    if (idx >= 0) run.weapons[idx] = makeWeapon(run.weaponLevel, w.y);
+    if (idx < 0) return;
+    run.weapons.splice(idx, 1); // 부서진 무기 제거 → 뒤 무기들이 앞으로 당겨짐
+    // 맨 뒤에 다음 단계 무기 보충(현재 뒤 무기보다 한 단계 강함)
+    run.weapons.push(makeWeapon(run.weaponLevel + run.weapons.length, 0));
+    // 슬롯 위치 재정렬: index 0 = 가장 앞(아래)
+    run.weapons.forEach((wp, i) => (wp.y = WEAPON_SLOTS_Y[i]));
   }
 
   // 총알 1발(관통 없음): 부대 폭 안 한 곳에서 위로 발사, 데미지는 인자로 받음
