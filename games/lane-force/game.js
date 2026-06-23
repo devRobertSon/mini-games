@@ -236,8 +236,9 @@
     // 한 발의 데미지를 실제 병력에 비례해 키워 총 화력 = 병력 × 발사속도 × 데미지 유지.
     // 화면 총알 상한에 막혀 못 쏜 발사분은 누적에 되돌려 화력 손실을 막는다(상한은 backlog로 보존).
     // (총알은 여전히 실제로 날아가 적에 맞아야만 피해 — 자동/관통 아님)
+    // 성장(충원) 레인(lane 0)에서는 발사하지 않음 — 화력 낭비 방지
     const shooters = Math.min(Math.floor(run.army), SHOOTER_CAP);
-    if (shooters > 0) {
+    if (shooters > 0 && lane !== 0) {
       run.fireAcc += shooters * run.fireRate * dt;
       const want = Math.floor(run.fireAcc);
       run.fireAcc -= want;
