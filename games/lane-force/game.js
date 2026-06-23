@@ -168,7 +168,7 @@
     // 난이도 시간 D: 1000점 전에는 경과시간과 동일, 1000점 초과분은 제곱식으로 가산
     // → 1000점 이후부터 점수가 오를수록 적 강화 증가폭이 점점 더 커진다.
     const over = Math.max(0, run.score - 1000);
-    const D = e + 100 * Math.pow(over / 1000, 1.3);
+    const D = e + 100 * Math.pow(over / 1000, 1.1);
 
     // 이동
     const dir = (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
